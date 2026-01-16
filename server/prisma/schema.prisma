@@ -1,0 +1,192 @@
+// Prisma schema for ChatForge - OTP-based Multi-tenant Chatbot Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ Authentication Models ============
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  password      String   // For password-based auth (bcrypted)
+  phoneNumber   String?
+  avatarUrl     String?  // User profile avatar
+  isVerified    Boolean  @default(false)
+  chatLimit     Int      @default(10)   // Max chats per user (10 for new users)
+  chatUsageCount Int     @default(0)    // Current chat count
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  projects      Project[]
+  conversations Conversation[]
+  refreshTokens RefreshToken[]
+  
+  // Indexes for performance and data isolation
+  @@index([email])
+  @@index([isVerified])
+  @@index([createdAt])
+  @@index([chatUsageCount]) // For quota enforcement queries
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model OTP {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes for fast lookups
+  @@unique([email, code])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+// ============ Project Models (User-isolated) ============
+
+model Project {
+  id             String   @id @default(cuid())
+  userId         String   // CRITICAL: Foreign key for data isolation
+  name           String
+  description    String?
+  model          String   @default("gemini-2.0-flash")
+  temperature    Float    @default(0.7)
+  maxTokens      Int      @default(2000)
+  systemPrompt   String   @default("You are a helpful AI assistant.") @db.Text
+  isActive       Boolean  @default(true)
+  deletedAt      DateTime? // Soft delete support
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompts        Prompt[]
+  conversations  Conversation[]
+  files          File[]
+
+  // CRITICAL INDEXES FOR DATA ISOLATION
+  @@index([userId]) // Must filter by userId in all queries
+  @@index([createdAt])
+  @@index([deletedAt]) // Index for soft delete queries
+}
+
+model Prompt {
+  id        String   @id @default(cuid())
+  projectId String
+  content   String   @db.Text
+  version   Int      @default(1)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Relations
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([projectId])
+}
+
+// ============ Chat Models (User-isolated through projectId) ============
+
+model Conversation {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String   // Foreign key for user isolation (inherited through project)
+  title     String   @default("New Conversation") @db.VarChar(200)
+  deletedAt DateTime? // Soft delete support
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  // Indexes - CRITICAL for data isolation and performance
+  @@index([projectId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([deletedAt]) // For soft delete queries
+  @@unique([projectId, id]) // Ensure conversation belongs to project
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // 'user' | 'assistant' | 'system'
+  content        String   @db.Text
+  tokensUsed     Int?
+  model          String?  // Model used for this message (e.g., 'gpt-4', 'claude-3-opus')
+  createdAt      DateTime @default(now())
+
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  // Indexes for performance
+  @@index([conversationId])
+  @@index([role])
+  @@index([createdAt])
+}
+
+// ============ File Models (User-isolated through projectId) ============
+
+model File {
+  id                  String   @id @default(cuid())
+  projectId           String
+  filename            String
+  originalName        String
+  mimeType            String
+  size                Int
+  path                String?  // Local path (optional, for backward compatibility)
+  cloudinaryUrl       String?  // Cloudinary CDN URL
+  cloudinaryPublicId  String?  // Cloudinary public ID for deletion
+  openaiFileId        String?
+  createdAt           DateTime @default(now())
+
+  // Relations
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([projectId])
+  @@index([createdAt])
+}
+
+// ============ Subscription Model (Optional for future use) ============
+
+model Subscription {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  tier           String   @default("free") // free, pro, enterprise
+  tokensUsed     Int      @default(0)
+  monthlyLimit   Int      @default(10000)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([email])
+}
