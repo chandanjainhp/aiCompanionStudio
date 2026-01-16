@@ -10,7 +10,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "deploy": "npm run build && echo 'Use deploy-client.sh for deployment'",
+    "deploy:vercel": "npm run build && echo 'Deploy to Vercel'",
+    "deploy:netlify": "npm run build && echo 'Deploy to Netlify'",
+    "deploy:static": "npm run build && echo 'Deploy dist/ to static hosting'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

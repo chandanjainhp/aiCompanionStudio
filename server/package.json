@@ -17,13 +17,19 @@
     "postinstall": "prisma generate",
     "dev": "nodemon -r dotenv/config src/index.js",
     "start": "node src/index.js",
+    "build": "echo 'No build needed for Node.js server'",
+    "test": "echo 'Run tests with your test framework'",
     "lint": "eslint src",
     "format": "prettier --write src",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "db:seed": "node prisma/seed.js"
+    "db:seed": "node prisma/seed.js",
+    "deploy": "node -e \"console.log('Use deploy-server.sh or deploy.sh for deployment')\"",
+    "deploy:render": "echo 'Push to GitHub, then deploy via Render dashboard'",
+    "deploy:railway": "echo 'Push to GitHub, then deploy via Railway dashboard'",
+    "deploy:fly": "echo 'Requires flyctl CLI - see deploy-server.sh'"
   },
   "dependencies": {
     "@google/generative-ai": "^0.3.0",
