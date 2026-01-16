@@ -88,26 +88,6 @@ app.get('/test', (req, res) => {
   });
 });
 
-// Debug route to list all projects (remove in production)
-app.get('/debug/projects', async (req, res) => {
-  try {
-    const { prisma } = await import('./config/database.js');
-    const projects = await prisma.project.findMany({
-      select: { id: true, name: true, userId: true, createdAt: true },
-    });
-    res.status(200).json({
-      success: true,
-      message: 'All projects in database',
-      projects,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
-
 // ============ API Routes ============
 
 // Auth routes

@@ -67,11 +67,39 @@ const requiredEnvVars = [
   'DATABASE_URL',
   'JWT_SECRET',
   'JWT_REFRESH_SECRET',
-  'GOOGLE_API_KEY',
+  'OPENROUTER_API_KEY',
 ];
 
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
-    console.warn(`⚠️ Warning: Missing required environment variable: ${envVar}`);
+    if (config.isProduction) {
+      // In production, missing required env vars should cause immediate failure
+      console.error(`❌ CRITICAL: Missing required environment variable: ${envVar}`);
+      throw new Error(`Missing required environment variable: ${envVar}`);
+    } else {
+      // In development, just warn
+      console.warn(`⚠️ Warning: Missing required environment variable: ${envVar}`);
+    }
   }
 }
+
+export const validateProductionEnv = () => {
+  if (config.isProduction) {
+    const required = [
+      'DATABASE_URL',
+      'JWT_SECRET',
+      'JWT_REFRESH_SECRET',
+      'OPENROUTER_API_KEY',
+      'APP_URL',
+    ];
+    
+    const missing = required.filter(key => !process.env[key]);
+    
+    if (missing.length > 0) {
+      throw new Error(`Missing required env vars for production: ${missing.join(', ')}`);
+    }
+    
+    console.log('✅ [Config] Production environment validation passed');
+  }
+};
+

@@ -3,11 +3,14 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import app from './app.js';
-import { config } from './config/env.js';
+import { config, validateProductionEnv } from './config/env.js';
 import { prisma } from './config/database.js';
 
 // Load environment variables
 dotenv.config();
+
+// Validate production environment
+validateProductionEnv();
 
 // Ensure uploads directory exists
 const uploadDir = path.resolve(config.fileUploadPath);
