@@ -64,7 +64,7 @@ Bun (package manager)
 ### Backend
 ```
 Node.js + Express
-TypeScript (ES6+)
+JavaScript (ES Modules)
 PostgreSQL + Prisma ORM
 JWT + bcrypt (authentication)
 OpenRouter.ai API (LLM proxy)
