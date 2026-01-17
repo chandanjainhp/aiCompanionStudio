@@ -59,9 +59,10 @@ const models: { value: AIModel; label: string; description: string }[] = [
 
 interface CreateProjectModalProps {
   children?: React.ReactNode;
+  onSuccess?: () => void;
 }
 
-export function CreateProjectModal({ children }: CreateProjectModalProps) {
+export function CreateProjectModal({ children, onSuccess }: CreateProjectModalProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createProject } = useProjectsStore();
@@ -107,6 +108,8 @@ export function CreateProjectModal({ children }: CreateProjectModalProps) {
       });
       setOpen(false);
       reset();
+      // Call success callback to refresh projects
+      onSuccess?.();
     } catch {
       toast({
         title: 'Failed to create project',

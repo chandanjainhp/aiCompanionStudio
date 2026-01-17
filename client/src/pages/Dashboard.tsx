@@ -25,20 +25,25 @@ export default function Dashboard() {
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Trigger refresh when projects are created
 
   useEffect(() => {
-    // Only fetch once on mount if projects empty
-    if (!hasAttemptedFetch && (!projects || projects.length === 0)) {
-      try {
-        console.log('📦 [Dashboard] Loading projects on mount...');
-        fetchProjects();
-        setHasAttemptedFetch(true);
-      } catch (err) {
-        console.error('❌ [Dashboard] Failed to load projects:', err);
-        handleError(err, 'Failed to load projects');
-      }
+    // Fetch projects on mount or when refresh is triggered
+    try {
+      console.log('📦 [Dashboard] Loading projects...');
+      fetchProjects();
+      setHasAttemptedFetch(true);
+    } catch (err) {
+      console.error('❌ [Dashboard] Failed to load projects:', err);
+      handleError(err, 'Failed to load projects');
     }
-  }, [hasAttemptedFetch, projects, fetchProjects, handleError]);
+  }, [refreshKey, fetchProjects, handleError]);
+
+  // Callback to refresh projects after creation
+  const handleProjectCreated = () => {
+    console.log('🔄 [Dashboard] Project created, refreshing list...');
+    setRefreshKey(prev => prev + 1);
+  };
 
   const filteredProjects = projects
     .filter((project) =>
@@ -103,7 +108,7 @@ export default function Dashboard() {
                 Manage your AI agents and chatbots
               </p>
             </div>
-            <CreateProjectModal>
+            <CreateProjectModal onSuccess={handleProjectCreated}>
               <Button className="gap-2 shadow-glow">
                 <Plus className="w-4 h-4" />
                 New Project
@@ -182,7 +187,7 @@ export default function Dashboard() {
                 : 'Get started by creating an AI agent with custom prompts and settings'}
             </p>
             {!searchQuery && (
-              <CreateProjectModal>
+              <CreateProjectModal onSuccess={handleProjectCreated}>
                 <Button className="gap-2">
                   <Plus className="w-4 h-4" />
                   New Project
