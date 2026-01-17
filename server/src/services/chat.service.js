@@ -386,6 +386,12 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
     try {
       const { callOpenRouterWithContext } = await import('./openrouter.service.js');
       console.log('   🔵 Attempting to call OpenRouter...');
+      console.log('   📋 OpenRouter Details:', {
+        model: project.model,
+        temperature: project.temperature,
+        maxTokens: project.maxTokens,
+        hasApiKey: !!process.env.OPENROUTER_API_KEY,
+      });
       assistantContent = await callOpenRouterWithContext(
         project,
         userMessage,
@@ -395,19 +401,31 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
       console.log('   🟢 OpenRouter call succeeded');
       console.log('✅ [sendChatMessage] OpenRouter succeeded');
     } catch (openrouterError) {
+      console.log('\n❌ [sendChatMessage] OpenRouter FAILED');
+      console.log('   Error type:', openrouterError.constructor.name);
+      console.log('   Error message:', openrouterError.message);
+      console.log('   Error status:', openrouterError.status);
+      console.log('   Error code:', openrouterError.code);
       console.log('⚠️  [sendChatMessage] OpenRouter failed, trying Local LLM for development...');
-      console.log('   Error:', openrouterError.message);
       aiError = openrouterError;
       
       // Fall back to Local LLM for development
       try {
         const { callLocalLLM } = await import('./local-llm.service.js');
         console.log('   🔵 Attempting to call Local LLM...');
+        console.log('   📋 Local LLM Details:', {
+          endpoint: process.env.LOCAL_LLM_ENDPOINT,
+          enabled: process.env.LOCAL_LLM_ENABLED,
+        });
         assistantContent = await callLocalLLM(userMessage, history, systemPrompt);
         console.log('   🟢 Local LLM call succeeded');
         console.log('✅ [sendChatMessage] Local LLM succeeded (after OpenRouter failure)');
         aiError = null; // Clear error since Local LLM succeeded
       } catch (localError) {
+        console.log('\n❌ [sendChatMessage] Local LLM ALSO FAILED');
+        console.log('   Error type:', localError.constructor.name);
+        console.log('   Error message:', localError.message);
+        console.log('   Error code:', localError.code);
         console.log('❌ [sendChatMessage] Both OpenRouter and Local LLM failed');
         aiError = localError;
         assistantContent = "I encountered an issue processing your message. Your message has been saved. Please try again shortly.";
