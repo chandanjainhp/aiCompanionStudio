@@ -184,12 +184,25 @@ export const useProjectsStore = create<ProjectsState>()(
             conversationsData = conversationsData.conversations;
           }
           
-          const conversations = (Array.isArray(conversationsData) ? conversationsData : []).map(conv => ({
-            ...conv,
-            messages: Array.isArray(conv.messages) ? conv.messages : []
-          }));
+          // Deduplicate by ID and ensure messages array exists
+          const seenIds = new Set<string>();
+          const conversations = (Array.isArray(conversationsData) ? conversationsData : [])
+            .filter(conv => {
+              if (!conv.id || seenIds.has(conv.id)) {
+                console.warn('⚠️ [fetchConversations] Filtering duplicate conversation:', conv.id);
+                return false;
+              }
+              seenIds.add(conv.id);
+              return true;
+            })
+            .map(conv => ({
+              ...conv,
+              messages: Array.isArray(conv.messages) ? conv.messages : []
+            }))
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+          
           set({ conversations });
-          console.log('✅ [fetchConversations] Loaded', conversations.length, 'conversations');
+          console.log('✅ [fetchConversations] Loaded', conversations.length, 'unique conversations');
         } catch (error) {
           console.error('❌ [fetchConversations] Failed:', error);
           // Don't throw - allow app to continue with empty conversations
@@ -282,11 +295,21 @@ export const useProjectsStore = create<ProjectsState>()(
             hasMessages: sanitizedConversation.messages.length >= 0,
           });
           
-          // ✅ UPDATE STORE: Prepend to conversations list
-          set((state) => ({
-            conversations: [sanitizedConversation, ...state.conversations],
-            currentConversation: sanitizedConversation,
-          }));
+          // ✅ UPDATE STORE: Check for duplicate before prepending
+          set((state) => {
+            // Prevent duplicate conversations with same ID
+            const exists = state.conversations.some(c => c.id === sanitizedConversation.id);
+            if (exists) {
+              console.warn('⚠️ [createConversation] Conversation already exists:', sanitizedConversation.id);
+              return {
+                currentConversation: sanitizedConversation,
+              };
+            }
+            return {
+              conversations: [sanitizedConversation, ...state.conversations],
+              currentConversation: sanitizedConversation,
+            };
+          });
           
           console.log('✅ [createConversation] Created and stored:', sanitizedConversation.id);
           return sanitizedConversation;

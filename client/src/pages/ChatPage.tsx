@@ -355,67 +355,73 @@ export default function ChatPage() {
             </div>
 
             {/* Conversations List */}
-            <ScrollArea className="flex-1">
-              <div className="p-2 space-y-1">
-                {projectConversations.map((conversation) => (
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <ScrollArea className="flex-1">
+                <div className="p-2 space-y-1">
+                  {projectConversations.map((conversation) => (
                   <div
                     key={conversation.id}
                     className={cn(
-                      'group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
+                      'flex items-center justify-between gap-2 p-2 rounded-lg cursor-pointer transition-colors group',
                       'hover:bg-muted',
                       currentConversation?.id === conversation.id && 'bg-muted'
                     )}
                     onClick={() => setCurrentConversation(conversation)}
                   >
-                    <MessageSquare className="w-4 h-4 shrink-0 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      {renamingId === conversation.id ? (
-                        <input
-                          type="text"
-                          value={newTitle}
-                          onChange={(e) => setNewTitle(e.target.value)}
-                          onBlur={() => {
-                            if (newTitle.trim()) {
-                              updateConversation(projectId, conversation.id, newTitle.trim());
-                            }
-                            setRenamingId(null);
-                            setNewTitle('');
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <MessageSquare className="w-4 h-4 shrink-0 text-muted-foreground" />
+                      <div className="flex-1 min-w-0">
+                        {renamingId === conversation.id ? (
+                          <input
+                            type="text"
+                            value={newTitle}
+                            onChange={(e) => setNewTitle(e.target.value)}
+                            onBlur={() => {
                               if (newTitle.trim()) {
                                 updateConversation(projectId, conversation.id, newTitle.trim());
                               }
                               setRenamingId(null);
                               setNewTitle('');
-                            } else if (e.key === 'Escape') {
-                              setRenamingId(null);
-                              setNewTitle('');
-                            }
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-full text-sm font-medium bg-background border border-primary rounded px-2 py-1 text-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                          autoFocus
-                        />
-                      ) : (
-                        <>
-                          <p className="text-sm font-medium truncate">
-                            {conversation.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(typeof conversation.updatedAt === 'string' ? new Date(conversation.updatedAt) : (conversation.updatedAt as Date), 'MMM d, h:mm a')}
-                          </p>
-                        </>
-                      )}
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                if (newTitle.trim()) {
+                                  updateConversation(projectId, conversation.id, newTitle.trim());
+                                }
+                                setRenamingId(null);
+                                setNewTitle('');
+                              } else if (e.key === 'Escape') {
+                                setRenamingId(null);
+                                setNewTitle('');
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full text-sm font-medium bg-background border border-primary rounded px-2 py-1 text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            autoFocus
+                            placeholder="Enter new title"
+                            title="Rename conversation"
+                          />
+                        ) : (
+                          <>
+                            <p className="text-sm font-medium truncate">
+                              {conversation.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {format(typeof conversation.updatedAt === 'string' ? new Date(conversation.updatedAt) : (conversation.updatedAt as Date), 'MMM d, h:mm a')}
+                            </p>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-0.5 shrink-0 pointer-events-auto">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-6 w-6 p-0 hover:bg-muted-foreground/20"
                         title="Rename"
                         onClick={(e) => {
                           e.stopPropagation();
+                          e.preventDefault();
                           setRenamingId(conversation.id);
                           setNewTitle(conversation.title);
                         }}
@@ -425,10 +431,11 @@ export default function ChatPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
                         title="Delete"
                         onClick={async (e) => {
                           e.stopPropagation();
+                          e.preventDefault();
                           try {
                             await deleteConversation(projectId, conversation.id);
                             toast({
@@ -451,8 +458,9 @@ export default function ChatPage() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </ScrollArea>
+                </div>
+              </ScrollArea>
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>
