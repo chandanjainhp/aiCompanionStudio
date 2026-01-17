@@ -193,7 +193,9 @@ export default function ChatPage() {
       if (!conversationToUse) {
         console.log('💬 [handleSendMessage] No conversation exists, auto-creating one...');
         try {
-          conversationToUse = await createConversationInStore(projectId);
+          // Use first 50 chars of message as conversation title
+          const conversationTitle = content.length > 50 ? content.substring(0, 50) + '...' : content;
+          conversationToUse = await createConversationInStore(projectId, conversationTitle);
           
           if (!conversationToUse || !conversationToUse.id) {
             throw new Error('Failed to create conversation');
@@ -201,7 +203,7 @@ export default function ChatPage() {
           
           // Set as current conversation for future messages
           setCurrentConversation(conversationToUse);
-          console.log('✅ [handleSendMessage] Auto-created conversation:', conversationToUse.id);
+          console.log('✅ [handleSendMessage] Auto-created conversation:', conversationToUse.id, 'with title:', conversationTitle);
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Failed to create conversation';
           console.error('❌ [handleSendMessage] Auto-create failed:', errorMsg);

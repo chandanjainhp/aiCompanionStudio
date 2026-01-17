@@ -22,7 +22,7 @@ interface ProjectsState {
   // Conversation actions
   fetchConversations: (projectId: string) => Promise<void>;
   fetchConversationMessages: (projectId: string, conversationId: string) => Promise<void>;
-  createConversation: (projectId: string) => Promise<Conversation>;
+  createConversation: (projectId: string, title?: string) => Promise<Conversation>;
   sendMessage: (projectId: string, conversationId: string, content: string) => Promise<{ userMessage: Message; assistantMessage: Message }>;
   setCurrentConversation: (conversation: Conversation | null) => void;
   addMessage: (conversationId: string, message: Omit<Message, 'id' | 'createdAt'>) => void;
@@ -246,10 +246,10 @@ export const useProjectsStore = create<ProjectsState>()(
         }
       },
 
-      createConversation: async (projectId) => {
+      createConversation: async (projectId, initialTitle = 'New Conversation') => {
         try {
-          console.log('📝 [createConversation] Creating for project:', projectId);
-          const response = await apiClient.createConversation(projectId, 'New Conversation') as unknown;
+          console.log('📝 [createConversation] Creating for project:', projectId, 'with title:', initialTitle);
+          const response = await apiClient.createConversation(projectId, initialTitle) as unknown;
           
           // Extract conversation from response
           const newConversation = response.data || response;
