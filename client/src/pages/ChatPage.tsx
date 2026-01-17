@@ -203,6 +203,10 @@ export default function ChatPage() {
           
           // Set as current conversation for future messages
           setCurrentConversation(conversationToUse);
+          
+          // 🔄 Refresh conversations list to ensure new conversation appears in sidebar
+          await fetchConversations(projectId);
+          
           console.log('✅ [handleSendMessage] Auto-created conversation:', conversationToUse.id, 'with title:', conversationTitle);
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Failed to create conversation';
@@ -290,7 +294,7 @@ export default function ChatPage() {
         setStreamingContent('');
       }
     },
-    [projectId, sendMessage, navigate, toast, setCurrentConversation, createConversationInStore]
+    [projectId, sendMessage, navigate, toast, setCurrentConversation, createConversationInStore, fetchConversations]
   );
 
   const handleStopStreaming = () => {
