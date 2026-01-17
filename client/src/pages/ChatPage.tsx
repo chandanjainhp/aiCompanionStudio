@@ -317,7 +317,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen flex">
+    <div className="h-screen flex overflow-hidden">
       {/* Project Sidebar */}
       <AnimatePresence initial={false}>
         {projectSidebarOpen && (
@@ -326,7 +326,7 @@ export default function ChatPage() {
             animate={{ width: 280, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="h-full border-r border-border bg-background flex flex-col"
+            className="h-full border-r border-border bg-background flex flex-col flex-shrink-0"
           >
             {/* Project Header */}
             <div className="p-4 border-b border-border">
@@ -457,13 +457,13 @@ export default function ChatPage() {
         )}
       </AnimatePresence>
 
-      {/* Sidebar Toggle */}
+      {/* Sidebar Toggle Button */}
       <Button
         variant="ghost"
         size="icon"
-        className="absolute left-0 top-1/2 -translate-y-1/2 h-12 w-6 rounded-l-none z-10"
+        className="h-12 w-6 rounded-none border-r border-border flex-shrink-0 hover:bg-muted"
         onClick={toggleProjectSidebar}
-        style={{ left: projectSidebarOpen ? 280 : 0 }}
+        title={projectSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
       >
         {projectSidebarOpen ? (
           <ChevronLeft className="w-4 h-4" />
