@@ -123,7 +123,7 @@ export default function ChatPage() {
   }, [projectId, projects, conversations, currentConversation, conversationsLoaded, navigate, setCurrentProject, setCurrentConversation, toast]);
 
   const projectConversations = conversations
-    .filter((c) => c.projectId === projectId && !c.deletedAt)
+    .filter((c) => c.projectId === projectId)
     .reduce((unique, conv) => {
       // Deduplicate by ID - keep most recent version
       const existing = unique.find(c => c.id === conv.id);
