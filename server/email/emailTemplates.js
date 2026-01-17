@@ -175,10 +175,6 @@ export const PASSWORD_RESET_REQUEST_TEMPLATE = `
 </body>
 </html>
 `;
-  </div>
-</body>
-</html>
-`;
 
 export const PASSWORD_RESET_OTP_TEMPLATE = `
 <!DOCTYPE html>
