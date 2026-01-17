@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChatMessages, ChatInput, ChatEmptyState } from '@/components/chat';
 import { useProjectsStore } from '@/store/projectsStore';
@@ -92,7 +91,7 @@ export default function ChatPage() {
           });
         });
     }
-  }, [projectId, currentConversation?.id, fetchConversationMessages, toast]);
+  }, [projectId, currentConversation?.id, currentConversation?.messages?.length, fetchConversationMessages, toast]);
 
   // Set current project on mount or when projects change
   useEffect(() => {
@@ -123,9 +122,18 @@ export default function ChatPage() {
     }
   }, [projectId, projects, conversations, currentConversation, conversationsLoaded, navigate, setCurrentProject, setCurrentConversation, toast]);
 
-  const projectConversations = conversations.filter(
-    (c) => c.projectId === projectId
-  );
+  const projectConversations = conversations
+    .filter((c) => c.projectId === projectId && !c.deletedAt)
+    .reduce((unique, conv) => {
+      // Deduplicate by ID - keep most recent version
+      const existing = unique.find(c => c.id === conv.id);
+      if (!existing) {
+        unique.push(conv);
+      } else if (new Date(conv.updatedAt) > new Date(existing.updatedAt)) {
+        unique[unique.indexOf(existing)] = conv;
+      }
+      return unique;
+    }, [] as typeof conversations);
 
   const handleNewConversation = async () => {
     if (!projectId) return;
@@ -298,7 +306,7 @@ export default function ChatPage() {
         setStreamingContent('');
       }
     },
-    [projectId, sendMessage, navigate, toast, setCurrentConversation, createConversationInStore, fetchConversations]
+    [projectId, sendMessage, navigate, toast, setCurrentConversation, createConversationInStore, fetchConversations, currentConversation]
   );
 
   const handleStopStreaming = () => {

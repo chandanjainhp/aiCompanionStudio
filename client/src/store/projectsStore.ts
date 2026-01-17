@@ -167,7 +167,29 @@ export const useProjectsStore = create<ProjectsState>()(
       },
 
       setCurrentProject: (project) => {
-        set({ currentProject: project });
+        set((state) => {
+          // When switching projects, deduplicate conversations
+          if (project?.id && state.conversations.length > 0) {
+            const dedupMap = new Map<string, any>();
+            state.conversations.forEach(conv => {
+              if (conv.id) {
+                const existing = dedupMap.get(conv.id);
+                if (!existing || new Date(conv.updatedAt) > new Date(existing.updatedAt)) {
+                  dedupMap.set(conv.id, conv);
+                }
+              }
+            });
+            const deduped = Array.from(dedupMap.values());
+            if (deduped.length < state.conversations.length) {
+              console.warn(`📦 [setCurrentProject] Removed ${state.conversations.length - deduped.length} duplicate conversations`);
+              return {
+                currentProject: project,
+                conversations: deduped,
+              };
+            }
+          }
+          return { currentProject: project };
+        });
       },
 
       fetchConversations: async (projectId) => {
@@ -185,21 +207,26 @@ export const useProjectsStore = create<ProjectsState>()(
           }
           
           // Deduplicate by ID and ensure messages array exists
-          const seenIds = new Set<string>();
-          const conversations = (Array.isArray(conversationsData) ? conversationsData : [])
-            .filter(conv => {
-              if (!conv.id || seenIds.has(conv.id)) {
-                console.warn('⚠️ [fetchConversations] Filtering duplicate conversation:', conv.id);
-                return false;
+          // Create a map to keep only the most recently updated version of each conversation
+          const conversationMap = new Map<string, any>();
+          (Array.isArray(conversationsData) ? conversationsData : [])
+            .filter(conv => conv.id && conv.projectId === projectId)
+            .forEach(conv => {
+              const existing = conversationMap.get(conv.id);
+              // Keep the conversation with the most recent updatedAt
+              if (!existing || new Date(conv.updatedAt) > new Date(existing.updatedAt)) {
+                conversationMap.set(conv.id, conv);
               }
-              seenIds.add(conv.id);
-              return true;
-            })
+            });
+          
+          const conversations = Array.from(conversationMap.values())
             .map(conv => ({
               ...conv,
               messages: Array.isArray(conv.messages) ? conv.messages : []
             }))
             .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+          
+          console.log('📦 [fetchConversations] Raw count:', Array.isArray(conversationsData) ? conversationsData.length : 0, ', Unique count:', conversations.length);
           
           set({ conversations });
           console.log('✅ [fetchConversations] Loaded', conversations.length, 'unique conversations');
@@ -320,6 +347,18 @@ export const useProjectsStore = create<ProjectsState>()(
       },
 
       setCurrentConversation: (conversation) => {
+        // Validate conversation before setting
+        if (conversation) {
+          if (!conversation.id) {
+            console.warn('⚠️ [setCurrentConversation] Attempted to set conversation without ID');
+            return;
+          }
+          // Reject temporary IDs
+          if (/^\d{13,}$/.test(conversation.id)) {
+            console.warn('⚠️ [setCurrentConversation] Rejected conversation with temporary ID:', conversation.id);
+            return;
+          }
+        }
         set({ currentConversation: conversation });
       },
 
