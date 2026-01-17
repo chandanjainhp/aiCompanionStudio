@@ -178,17 +178,6 @@ export default function ChatPage() {
 
   const handleSendMessage = useCallback(
     async (content: string) => {
-      // 🔴 CRITICAL: Validate we have conversation BEFORE attempting send
-      if (!currentConversation) {
-        console.error('❌ [handleSendMessage] No current conversation selected');
-        toast({
-          title: 'Error',
-          description: 'Please select or create a conversation first',
-          variant: 'destructive',
-        });
-        return;
-      }
-
       if (!projectId) {
         console.error('❌ [handleSendMessage] No project ID');
         toast({
@@ -199,9 +188,35 @@ export default function ChatPage() {
         return;
       }
 
-      // 🔴 CRITICAL: Validate conversation ID is real (not temporary)
-      if (!currentConversation.id) {
-        console.error('❌ [handleSendMessage] Current conversation has no ID');
+      // � AUTO-CREATE CONVERSATION if none selected
+      let conversationToUse = currentConversation;
+      if (!conversationToUse) {
+        console.log('💬 [handleSendMessage] No conversation exists, auto-creating one...');
+        try {
+          conversationToUse = await createConversationInStore(projectId);
+          
+          if (!conversationToUse || !conversationToUse.id) {
+            throw new Error('Failed to create conversation');
+          }
+          
+          // Set as current conversation for future messages
+          setCurrentConversation(conversationToUse);
+          console.log('✅ [handleSendMessage] Auto-created conversation:', conversationToUse.id);
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : 'Failed to create conversation';
+          console.error('❌ [handleSendMessage] Auto-create failed:', errorMsg);
+          toast({
+            title: 'Error',
+            description: 'Could not create conversation. Please try again.',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
+      // 🔴 CRITICAL: Validate conversation has valid ID (not temporary)
+      if (!conversationToUse.id) {
+        console.error('❌ [handleSendMessage] Conversation has no ID');
         setCurrentConversation(null);
         toast({
           title: 'Error',
@@ -212,8 +227,8 @@ export default function ChatPage() {
       }
 
       // 🔴 CRITICAL: Reject temporary IDs (all digits, 13+ chars = timestamp)
-      if (/^\d{13,}$/.test(currentConversation.id)) {
-        console.error('❌ [handleSendMessage] Conversation has temporary ID:', currentConversation.id);
+      if (/^\d{13,}$/.test(conversationToUse.id)) {
+        console.error('❌ [handleSendMessage] Conversation has temporary ID:', conversationToUse.id);
         setCurrentConversation(null);
         toast({
           title: 'Error',
@@ -226,7 +241,7 @@ export default function ChatPage() {
       console.log('✅ [handleSendMessage] Pre-flight validation passed');
       console.log('📤 [handleSendMessage] Sending to:', {
         projectId,
-        conversationId: currentConversation.id,
+        conversationId: conversationToUse.id,
         contentLength: content.length,
       });
 
@@ -235,7 +250,7 @@ export default function ChatPage() {
         // Use store's sendMessage which handles both user and assistant messages
         await sendMessage(
           projectId,
-          currentConversation.id,
+          conversationToUse.id,
           content
         );
 
@@ -273,7 +288,7 @@ export default function ChatPage() {
         setStreamingContent('');
       }
     },
-    [currentConversation, projectId, sendMessage, navigate, toast, setCurrentConversation]
+    [projectId, sendMessage, navigate, toast, setCurrentConversation, createConversationInStore]
   );
 
   const handleStopStreaming = () => {
