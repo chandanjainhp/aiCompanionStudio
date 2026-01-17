@@ -33,15 +33,26 @@ log_error() {
     echo -e "${RED}❌ [ERROR]${NC} $1"
 }
 
-# Check Node.js
+# Check Node.js and upgrade if needed
 check_node() {
     log_info "Checking Node.js installation..."
     if ! command -v node &> /dev/null; then
         log_error "Node.js is not installed"
-        exit 1
+        log_info "Installing Node.js 18 LTS..."
+        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - || true
+        sudo apt-get install -y nodejs || true
     fi
     
     NODE_VERSION=$(node -v)
+    NODE_MAJOR=$(echo $NODE_VERSION | cut -d'v' -f2 | cut -d'.' -f1)
+    
+    if [ "$NODE_MAJOR" -lt 16 ]; then
+        log_warn "Node.js $NODE_VERSION found - upgrading to 18 LTS (Prisma requires >= 16.13)"
+        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+        NODE_VERSION=$(node -v)
+    fi
+    
     log_success "Node.js $NODE_VERSION found"
 }
 
@@ -49,7 +60,7 @@ check_node() {
 install_deps() {
     log_info "Installing dependencies..."
     cd "$SERVER_DIR"
-    npm install
+    npm install --legacy-peer-deps
     log_success "Dependencies installed"
 }
 
@@ -133,8 +144,35 @@ build_prod() {
     fi
 }
 
-# Deploy to Render
-deploy_render() {
+# Push to GitHub
+push_to_git() {
+    log_info "Pushing code to GitHub..."
+    
+    if ! command -v git &> /dev/null; then
+        log_error "Git is not installed"
+        return 1
+    fi
+    
+    cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    # Check if there are changes to commit
+    if ! git diff-index --quiet HEAD --; then
+        log_info "Staging changes..."
+        git add -A
+        
+        log_info "Creating commit..."
+        git commit -m "Deploy: $(date +'%Y-%m-%d %H:%M:%S')"
+    fi
+    
+    # Push to current branch
+    BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    log_info "Pushing to GitHub branch: $BRANCH..."
+    git push origin "$BRANCH"
+    
+    log_success "Code pushed to GitHub"
+}
+
+
     log_info "Preparing for Render deployment..."
     log_info "Steps to deploy to Render:"
     echo ""
@@ -208,6 +246,9 @@ main() {
     test_server
     setup_database
     build_prod
+    
+    # Push to GitHub
+    push_to_git
     
     # Deploy based on platform
     case $platform in
