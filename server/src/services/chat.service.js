@@ -371,7 +371,7 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
     // Get conversation history
     const history = await getConversationHistory(conversationId, 10);
 
-    console.log('\n\n🚀🚀🚀 [sendChatMessage] ABOUT TO CALL OPENROUTER API 🚀🚀🚀');
+    console.log('\n\n🚀🚀🚀 [sendChatMessage] ABOUT TO CALL AI API 🚀🚀🚀');
     console.log('   Project model:', project.model);
     console.log('   Project temperature:', project.temperature);
     console.log('   Project maxTokens:', project.maxTokens);
@@ -380,49 +380,48 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
     console.log('   History messages:', history.length);
 
     let assistantContent;
-    let openrouterError = null;
-    const { callOpenRouterWithContext } = await import('./openrouter.service.js');
+    let aiError = null;
     
+    // Try local LLM first
     try {
-      console.log('   🔵 About to execute callOpenRouterWithContext...');
-      assistantContent = await callOpenRouterWithContext(
-        project,
-        userMessage,
-        history,
-        systemPrompt
-      );
-      console.log('   🟢 callOpenRouterWithContext returned successfully');
-      console.log('✅ [sendChatMessage] OpenRouter API succeeded');
-      console.log('📝 [sendChatMessage] Assistant response type:', typeof assistantContent);
-      console.log('📝 [sendChatMessage] Assistant response length:', assistantContent?.length);
-      console.log('📝 [sendChatMessage] Assistant response:', assistantContent?.substring(0, 100) + '...');
+      const { callLocalLLM } = await import('./local-llm.service.js');
+      console.log('   🔵 Attempting to call Local LLM...');
+      assistantContent = await callLocalLLM(userMessage, history, systemPrompt);
+      console.log('   🟢 Local LLM call succeeded');
+      console.log('✅ [sendChatMessage] Local LLM succeeded');
+    } catch (localError) {
+      console.log('⚠️  [sendChatMessage] Local LLM failed, trying OpenRouter...');
+      console.log('   Error:', localError.message);
+      aiError = localError;
       
-      if (!assistantContent || assistantContent.trim().length === 0) {
-        console.error('❌ [sendChatMessage] OpenRouter returned empty response!');
-        openrouterError = 'OpenRouter API returned empty response';
+      // Fall back to OpenRouter
+      try {
+        const { callOpenRouterWithContext } = await import('./openrouter.service.js');
+        console.log('   🔵 Attempting to call OpenRouter...');
+        assistantContent = await callOpenRouterWithContext(
+          project,
+          userMessage,
+          history,
+          systemPrompt
+        );
+        console.log('   🟢 OpenRouter call succeeded');
+        console.log('✅ [sendChatMessage] OpenRouter succeeded (after Local LLM failure)');
+        aiError = null; // Clear error since OpenRouter succeeded
+      } catch (openrouterError) {
+        console.log('❌ [sendChatMessage] Both Local LLM and OpenRouter failed');
+        aiError = openrouterError;
         assistantContent = "I encountered an issue processing your message. Your message has been saved. Please try again shortly.";
       }
-    } catch (error) {
-      console.log('\n\n❌❌❌ [sendChatMessage] EXCEPTION CAUGHT FROM OPENROUTER ❌❌❌');
-      console.log('   Error type:', error.constructor.name);
-      console.log('   Error name:', error?.name);
-      console.log('   Error message:', error?.message);
-      console.log('   Error status:', error?.status);
-      console.log('   Error statusCode:', error?.statusCode);
-      console.log('   Error code:', error?.code);
-      console.log('   Error.response:', error?.response);
-      console.log('   Full error keys:', Object.keys(error).join(', '));
-      console.log('   Stringified error:', JSON.stringify(error, null, 2));
-      console.log('   Full error object:', error);
-      console.log('❌❌❌ END OF ERROR INFO ❌❌❌\n\n');
-      
-      // Store the error for later
-      openrouterError = error?.message || 'Unknown error';
-      
-      // Set fallback error message
+    }
+
+    console.log('📝 [sendChatMessage] Assistant response type:', typeof assistantContent);
+    console.log('📝 [sendChatMessage] Assistant response length:', assistantContent?.length);
+    console.log('📝 [sendChatMessage] Assistant response:', assistantContent?.substring(0, 100) + '...');
+    
+    if (!assistantContent || assistantContent.trim().length === 0) {
+      console.error('❌ [sendChatMessage] AI returned empty response!');
+      aiError = aiError || new Error('AI API returned empty response');
       assistantContent = "I encountered an issue processing your message. Your message has been saved. Please try again shortly.";
-      
-      console.log('⚠️  [sendChatMessage] Using fallback error message');
     }
   
 
@@ -482,7 +481,7 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
     invalidateUserConversationsCache(userId);
 
     return {
-      success: !openrouterError,
+      success: !aiError,
       userMessage: savedUserMessage,
       assistantMessage: savedAssistantMessage,
       conversation: {
