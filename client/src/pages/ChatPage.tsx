@@ -363,9 +363,9 @@ export default function ChatPage() {
             </div>
 
             {/* Conversations List */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              <ScrollArea className="flex-1">
-                <div className="p-2 space-y-1">
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+              <ScrollArea className="flex-1 w-full">
+                <div className="px-2 py-1 space-y-1 pr-4">
                   {projectConversations.map((conversation) => (
                   <div
                     key={conversation.id}
