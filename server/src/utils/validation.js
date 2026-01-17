@@ -61,16 +61,32 @@ export const validateCreateProject = [
     .withMessage('Description must be less than 1000 characters'),
   body('model')
     .optional()
-    .isIn(['gemini-pro', 'gemini-pro-vision', 'gemini-2.0-flash'])
+    .isIn([
+      'openai/gpt-4-turbo',
+      'openai/gpt-4',
+      'openai/gpt-3.5-turbo',
+      'anthropic/claude-3-opus-20250219',
+      'anthropic/claude-3-sonnet-20250229',
+      'meta-llama/llama-3.1-405b',
+      'mistralai/mistral-large',
+      'gemini-pro',
+      'gemini-pro-vision',
+      'gemini-2.0-flash'
+    ])
     .withMessage('Invalid model selected'),
   body('temperature')
     .optional()
-    .isFloat({ min: 0, max: 2 })
-    .withMessage('Temperature must be between 0 and 2'),
+    .isFloat({ min: 0, max: 1 })
+    .withMessage('Temperature must be between 0 and 1'),
   body('maxTokens')
     .optional()
-    .isInt({ min: 1, max: 4000 })
-    .withMessage('Max tokens must be between 1 and 4000'),
+    .isInt({ min: 256, max: 8192 })
+    .withMessage('Max tokens must be between 256 and 8192'),
+  body('systemPrompt')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 4000 })
+    .withMessage('System prompt must be between 1 and 4000 characters'),
 ];
 
 export const validateUpdateProject = [
@@ -86,16 +102,27 @@ export const validateUpdateProject = [
     .withMessage('Description must be less than 1000 characters'),
   body('model')
     .optional()
-    .isIn(['gemini-2.0-flash'])
-    .withMessage('Only gemini-2.0-flash model is available in this version'),
+    .isIn([
+      'openai/gpt-4-turbo',
+      'openai/gpt-4',
+      'openai/gpt-3.5-turbo',
+      'anthropic/claude-3-opus-20250219',
+      'anthropic/claude-3-sonnet-20250229',
+      'meta-llama/llama-3.1-405b',
+      'mistralai/mistral-large',
+      'gemini-pro',
+      'gemini-pro-vision',
+      'gemini-2.0-flash'
+    ])
+    .withMessage('Invalid model selected'),
   body('temperature')
     .optional()
-    .isFloat({ min: 0, max: 2 })
-    .withMessage('Temperature must be between 0 and 2'),
+    .isFloat({ min: 0, max: 1 })
+    .withMessage('Temperature must be between 0 and 1'),
   body('maxTokens')
     .optional()
-    .isInt({ min: 1, max: 4000 })
-    .withMessage('Max tokens must be between 1 and 4000'),
+    .isInt({ min: 256, max: 8192 })
+    .withMessage('Max tokens must be between 256 and 8192'),
 ];
 
 // Prompt validation
