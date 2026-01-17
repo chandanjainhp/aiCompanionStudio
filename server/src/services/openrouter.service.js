@@ -10,10 +10,16 @@
 
 import OpenAI from 'openai';
 
+// Validate API key exists before initializing client
+if (!process.env.OPENROUTER_API_KEY) {
+  console.error('❌ [OpenRouter] CRITICAL: OPENROUTER_API_KEY not configured in .env');
+  console.error('Please add OPENROUTER_API_KEY to your .env file');
+}
+
 // Initialize OpenAI client configured for OpenRouter
 const openai = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY || 'sk-placeholder', // Placeholder if not set
   baseURL: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
   defaultHeaders: {
     'HTTP-Referer': process.env.APP_URL || 'http://localhost:5173',
     'X-Title': process.env.APP_NAME || 'AI Companion Studio',
