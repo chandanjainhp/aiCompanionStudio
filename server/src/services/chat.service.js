@@ -406,6 +406,7 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
       console.log('   Error message:', openrouterError.message);
       console.log('   Error status:', openrouterError.status);
       console.log('   Error code:', openrouterError.code);
+      console.log('   Full error:', JSON.stringify(openrouterError, null, 2));
       console.log('⚠️  [sendChatMessage] OpenRouter failed, trying Local LLM for development...');
       aiError = openrouterError;
       
@@ -426,6 +427,7 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
         console.log('   Error type:', localError.constructor.name);
         console.log('   Error message:', localError.message);
         console.log('   Error code:', localError.code);
+        console.log('   Full error:', JSON.stringify(localError, null, 2));
         console.log('❌ [sendChatMessage] Both OpenRouter and Local LLM failed');
         aiError = localError;
         assistantContent = "I encountered an issue processing your message. Your message has been saved. Please try again shortly.";
