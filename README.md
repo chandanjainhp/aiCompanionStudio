@@ -228,60 +228,229 @@ npx prisma studio
 
 ## 🚀 Running the Application
 
-### Development Mode
+### Quick Start (3 Steps)
 
-#### Terminal 1: Start Backend Server
+```bash
+# 1. Start Backend (Terminal 1)
+cd server
+npm run dev
+
+# 2. Start Frontend (Terminal 2)
+cd client
+npm run dev
+
+# 3. Open Browser
+# http://localhost:5173
+```
+
+### Detailed Setup Instructions
+
+#### Prerequisites Check
+```bash
+# Verify installations
+node --version      # Should be v18+
+npm --version       # Should be v9+
+psql --version      # Should be 12+
+```
+
+#### Step 1: Database Setup
+
+```bash
+# Create database
+createdb ai_companion_studio
+
+# Verify PostgreSQL is running
+psql -U postgres -d ai_companion_studio -c "SELECT 1;"
+```
+
+#### Step 2: Backend Setup
 
 ```bash
 cd server
 
-# Using Bun
-bun run dev
+# Install dependencies
+npm install
+# or with Bun: bun install
 
-# Using npm
+# Create .env file
+cp .env.example .env
+# Edit .env with your configuration:
+# - DATABASE_URL: postgresql://user:pass@localhost:5432/ai_companion_studio
+# - OPENROUTER_API_KEY: sk-or-v1-your-api-key
+# - JWT_SECRET: your-secret-key
+# - EMAIL_USER: your-email@gmail.com
+# - And other required variables (see Environment Setup section)
+
+# Run migrations
+npx prisma migrate deploy
+
+# Start backend server
 npm run dev
 
-# Expected output:
-# 🚀 Server is running
-# 📍 Host: 0.0.0.0
-# 📍 Port: 3000
-# 🌍 Environment: development
-# 🔗 API: http://localhost:3000/api/v1
-# 💻 Health Check: http://localhost:3000/health
+# Expected output shows:
+# ✓ Server running on port 3000
+# ✓ Connected to database
 ```
 
-#### Terminal 2: Start Frontend Dev Server
+#### Step 3: Frontend Setup (New Terminal)
 
 ```bash
 cd client
 
-# Using Bun
-bun run dev
+# Install dependencies
+npm install
+# or with Bun: bun install
 
-# Using npm
+# Create .env.local file
+echo "VITE_API_BASE_URL=http://localhost:3000/api/v1" > .env.local
+
+# Start frontend dev server
 npm run dev
 
-# Expected output:
+# Expected output shows:
 # VITE v5.x.x  ready in xxx ms
 # ➜  Local:   http://localhost:5173/
-# ➜  Press h + enter to show help
 ```
 
-#### Terminal 3: Optional - Prisma Studio
+#### Step 4: Optional - Database UI (New Terminal)
 
 ```bash
 cd server
 npx prisma studio
 
-# Opens database GUI at http://localhost:5555
+# Opens at http://localhost:5555
 ```
 
-### Access the Application
+### Access Points
 
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3000/api/v1
-- **Database Studio**: http://localhost:5555 (optional)
-- **Health Check**: http://localhost:3000/health
+```
+Frontend:      http://localhost:5173
+Backend API:   http://localhost:3000/api/v1
+Health Check:  http://localhost:3000/health
+Database UI:   http://localhost:5555 (optional)
+```
+
+### Available Commands
+
+#### Backend Commands
+```bash
+cd server
+
+npm run dev                      # Development with auto-reload
+npm start                        # Production mode
+npx prisma migrate deploy       # Apply migrations
+npx prisma studio              # Open database GUI
+npx prisma db seed             # Seed sample data
+node test-openrouter.js        # Test AI integration
+```
+
+#### Frontend Commands
+```bash
+cd client
+
+npm run dev                     # Development server
+npm run build                   # Build for production
+npm run preview                 # Preview production build
+npm run test                    # Run tests
+npm run lint                    # Check code style
+```
+
+### Development Workflow
+
+**Terminal 1 (Backend):**
+```bash
+cd server && npm run dev
+# Runs on http://localhost:3000
+# Auto-reloads on file changes
+```
+
+**Terminal 2 (Frontend):**
+```bash
+cd client && npm run dev
+# Runs on http://localhost:5173
+# Hot Module Replacement (HMR) enabled
+# Auto-reloads on file changes
+```
+
+**Terminal 3 (Optional - Database):**
+```bash
+cd server && npx prisma studio
+# Opens database GUI at http://localhost:5555
+# Inspect and edit data visually
+```
+
+### First Time Using the App
+
+1. **Open** http://localhost:5173
+2. **Register** - Click "Sign Up", enter email and password
+3. **Verify** - Check email for verification code, enter it
+4. **Login** - Use your credentials to log in
+5. **Create Project** - Click "New Project", configure AI settings
+6. **Start Chatting** - Click project, create conversation, send message
+7. **View Settings** - Explore profile, security, and preferences
+
+### Troubleshooting Startup
+
+**Backend won't start - "EADDRINUSE" error:**
+```bash
+# Port 3000 already in use
+# Option 1: Kill the process
+lsof -i :3000
+kill -9 <PID>
+
+# Option 2: Use different port
+PORT=3001 npm run dev
+```
+
+**Frontend won't start:**
+```bash
+# Clear cache and reinstall
+cd client
+rm -rf node_modules package-lock.json
+npm install
+npm run dev
+```
+
+**Database connection error:**
+```bash
+# Check PostgreSQL is running
+sudo systemctl status postgresql
+
+# Start PostgreSQL
+sudo systemctl start postgresql
+
+# Verify connection
+psql -U postgres -d ai_companion_studio -c "SELECT 1;"
+```
+
+**OpenRouter API not working:**
+```bash
+# Test integration
+cd server
+node test-openrouter.js
+
+# Check API key in .env
+# Visit https://openrouter.ai/keys to verify
+```
+
+### Full Setup Checklist
+
+- [ ] Node.js v18+ installed
+- [ ] PostgreSQL 12+ installed and running
+- [ ] Repository cloned
+- [ ] Database created: `ai_companion_studio`
+- [ ] `server/.env` configured with all variables
+- [ ] `client/.env.local` created
+- [ ] Backend dependencies installed: `npm install`
+- [ ] Client dependencies installed: `npm install`
+- [ ] Database migrations applied: `npx prisma migrate deploy`
+- [ ] OpenRouter API key added to `.env`
+- [ ] Backend running on http://localhost:3000
+- [ ] Frontend running on http://localhost:5173
+- [ ] Can access http://localhost:5173 in browser
+- [ ] Can register and log in
+- [ ] Can create a project
+- [ ] Can send message to AI and get response
 
 ---
 
