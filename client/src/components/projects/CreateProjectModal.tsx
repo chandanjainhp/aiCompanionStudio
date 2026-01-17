@@ -94,7 +94,8 @@ export function CreateProjectModal({ children, onSuccess }: CreateProjectModalPr
     setIsSubmitting(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      createProject({
+      console.log('📝 [CreateProjectModal] Creating project:', data.name);
+      await createProject({
         name: data.name,
         description: data.description,
         model: data.model,
@@ -102,6 +103,7 @@ export function CreateProjectModal({ children, onSuccess }: CreateProjectModalPr
         maxTokens: data.maxTokens,
         systemPrompt: data.systemPrompt,
       });
+      console.log('✅ [CreateProjectModal] Project created successfully');
       toast({
         title: 'Project created!',
         description: `${data.name} is ready to use.`,
@@ -109,8 +111,10 @@ export function CreateProjectModal({ children, onSuccess }: CreateProjectModalPr
       setOpen(false);
       reset();
       // Call success callback to refresh projects
+      console.log('🔄 [CreateProjectModal] Calling onSuccess callback');
       onSuccess?.();
-    } catch {
+    } catch (error) {
+      console.error('❌ [CreateProjectModal] Error:', error);
       toast({
         title: 'Failed to create project',
         description: 'Please try again.',

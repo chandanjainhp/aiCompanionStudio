@@ -42,6 +42,7 @@ export default function Dashboard() {
   // Callback to refresh projects after creation
   const handleProjectCreated = () => {
     console.log('🔄 [Dashboard] Project created, refreshing list...');
+    // Force refresh by incrementing key
     setRefreshKey(prev => prev + 1);
   };
 

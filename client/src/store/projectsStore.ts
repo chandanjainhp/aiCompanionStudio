@@ -47,9 +47,17 @@ export const useProjectsStore = create<ProjectsState>()(
           const newProject = await apiClient.createProject(projectData);
           
           console.log('✅ [createProject] Created project:', newProject.id);
+          console.log('✅ [createProject] New project data:', newProject);
+          
+          // Add new project to the beginning of the list
           set((state) => ({
             projects: [newProject, ...state.projects],
           }));
+          
+          // Force a re-fetch to ensure UI updates
+          setTimeout(() => {
+            get().fetchProjects();
+          }, 100);
         } catch (error) {
           console.error('❌ [createProject] Failed:', error);
           throw error;
