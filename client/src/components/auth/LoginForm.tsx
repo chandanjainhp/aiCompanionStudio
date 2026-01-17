@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
@@ -40,6 +40,7 @@ export function LoginForm() {
     handleSubmit,
     watch,
     reset,
+    control,
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -241,7 +242,17 @@ export function LoginForm() {
             {/* REMEMBER ME - ONLY SHOW FOR PASSWORD METHOD */}
             {loginMethod === 'password' && (
               <div className="flex items-center space-x-2 animate-in fade-in duration-200">
-                <Checkbox id="rememberMe" {...register('rememberMe')} />
+                <Controller
+                  name="rememberMe"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="rememberMe"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
                 <label
                   htmlFor="rememberMe"
                   className="text-sm text-muted-foreground cursor-pointer"
