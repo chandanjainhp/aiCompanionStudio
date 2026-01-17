@@ -7,6 +7,7 @@ import {
   Settings,
   Plus,
   Trash2,
+  Edit,
   MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ export default function ChatPage() {
     createConversation: createConversationInStore,
     setCurrentConversation,
     addMessage,
+    updateConversation,
     deleteConversation,
     fetchConversations,
     fetchConversationMessages,
@@ -48,6 +50,8 @@ export default function ChatPage() {
   const [isLoadingProject, setIsLoadingProject] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState('');
 
   // First, fetch projects if needed - only once on mount
   useEffect(() => {
@@ -365,38 +369,86 @@ export default function ChatPage() {
                   >
                     <MessageSquare className="w-4 h-4 shrink-0 text-muted-foreground" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {conversation.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(typeof conversation.updatedAt === 'string' ? new Date(conversation.updatedAt) : (conversation.updatedAt as Date), 'MMM d, h:mm a')}
-                      </p>
+                      {renamingId === conversation.id ? (
+                        <input
+                          type="text"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                          onBlur={() => {
+                            if (newTitle.trim()) {
+                              updateConversation(projectId, conversation.id, newTitle.trim());
+                            }
+                            setRenamingId(null);
+                            setNewTitle('');
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              if (newTitle.trim()) {
+                                updateConversation(projectId, conversation.id, newTitle.trim());
+                              }
+                              setRenamingId(null);
+                              setNewTitle('');
+                            } else if (e.key === 'Escape') {
+                              setRenamingId(null);
+                              setNewTitle('');
+                            }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full text-sm font-medium bg-background border border-primary rounded px-2 py-1 text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                          autoFocus
+                        />
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium truncate">
+                            {conversation.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(typeof conversation.updatedAt === 'string' ? new Date(conversation.updatedAt) : (conversation.updatedAt as Date), 'MMM d, h:mm a')}
+                          </p>
+                        </>
+                      )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        try {
-                          await deleteConversation(projectId, conversation.id);
-                          toast({
-                            title: 'Deleted',
-                            description: 'Conversation deleted',
-                          });
-                        } catch (error: Error | unknown) {
-                          const errorMsg = error instanceof Error ? error.message : 'Failed to delete';
-                          console.error('❌ [ChatPage] Delete failed:', errorMsg);
-                          toast({
-                            title: 'Error',
-                            description: errorMsg,
-                            variant: 'destructive',
-                          });
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        title="Rename"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRenamingId(conversation.id);
+                          setNewTitle(conversation.title);
+                        }}
+                      >
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        title="Delete"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            await deleteConversation(projectId, conversation.id);
+                            toast({
+                              title: 'Deleted',
+                              description: 'Conversation deleted',
+                            });
+                          } catch (error: Error | unknown) {
+                            const errorMsg = error instanceof Error ? error.message : 'Failed to delete';
+                            console.error('❌ [ChatPage] Delete failed:', errorMsg);
+                            toast({
+                              title: 'Error',
+                              description: errorMsg,
+                              variant: 'destructive',
+                            });
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

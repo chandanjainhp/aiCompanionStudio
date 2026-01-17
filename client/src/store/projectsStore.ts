@@ -26,6 +26,7 @@ interface ProjectsState {
   sendMessage: (projectId: string, conversationId: string, content: string) => Promise<{ userMessage: Message; assistantMessage: Message }>;
   setCurrentConversation: (conversation: Conversation | null) => void;
   addMessage: (conversationId: string, message: Omit<Message, 'id' | 'createdAt'>) => void;
+  updateConversation: (projectId: string, conversationId: string, title: string) => Promise<void>;
   deleteConversation: (projectId: string, conversationId: string) => Promise<void>;
 }
 
@@ -521,6 +522,26 @@ export const useProjectsStore = create<ProjectsState>()(
             currentConversation: updatedCurrentConv,
           };
         });
+      },
+
+      updateConversation: async (projectId, conversationId, title) => {
+        try {
+          console.log('✏️ [updateConversation] Updating:', conversationId, 'with title:', title);
+          // Call API to update conversation (if available)
+          // For now, just update local state
+          set((state) => ({
+            conversations: state.conversations.map((c) =>
+              c.id === conversationId ? { ...c, title, updatedAt: new Date() } : c
+            ),
+            currentConversation: state.currentConversation?.id === conversationId
+              ? { ...state.currentConversation, title, updatedAt: new Date() }
+              : state.currentConversation,
+          }));
+          console.log('✅ [updateConversation] Updated:', conversationId);
+        } catch (error) {
+          console.error('❌ [updateConversation] Failed:', error);
+          throw error;
+        }
       },
 
       deleteConversation: async (projectId, conversationId) => {
