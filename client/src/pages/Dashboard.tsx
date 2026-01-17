@@ -28,15 +28,19 @@ export default function Dashboard() {
   const [refreshKey, setRefreshKey] = useState(0); // Trigger refresh when projects are created
 
   useEffect(() => {
-    // Fetch projects on mount or when refresh is triggered
-    try {
-      console.log('📦 [Dashboard] Loading projects...');
-      fetchProjects();
-      setHasAttemptedFetch(true);
-    } catch (err) {
-      console.error('❌ [Dashboard] Failed to load projects:', err);
-      handleError(err, 'Failed to load projects');
-    }
+    // Fetch projects when component mounts or refresh is triggered
+    const loadProjects = async () => {
+      try {
+        console.log('📦 [Dashboard] Fetching projects (refreshKey:', refreshKey, ')...');
+        await fetchProjects();
+        console.log('✅ [Dashboard] Projects fetched successfully');
+      } catch (err) {
+        console.error('❌ [Dashboard] Failed to load projects:', err);
+        handleError(err, 'Failed to load projects');
+      }
+    };
+
+    loadProjects();
   }, [refreshKey, fetchProjects, handleError]);
 
   // Callback to refresh projects after creation

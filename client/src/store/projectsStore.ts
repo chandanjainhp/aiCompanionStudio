@@ -49,15 +49,17 @@ export const useProjectsStore = create<ProjectsState>()(
           console.log('✅ [createProject] Created project:', newProject.id);
           console.log('✅ [createProject] New project data:', newProject);
           
+          // Ensure new project has conversationCount: 0
+          if (newProject.conversationCount === undefined || newProject.conversationCount === null) {
+            newProject.conversationCount = 0;
+          }
+          
           // Add new project to the beginning of the list
           set((state) => ({
             projects: [newProject, ...state.projects],
           }));
           
-          // Force a re-fetch to ensure UI updates
-          setTimeout(() => {
-            get().fetchProjects();
-          }, 100);
+          console.log('✅ [createProject] Project added to state');
         } catch (error) {
           console.error('❌ [createProject] Failed:', error);
           throw error;
