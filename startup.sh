@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# AI Companion Studio - Complete Startup Script with tmux
-# This script manages PostgreSQL, Backend Server, and optionally Client dev server
+# AI Companion Studio - Startup Script
+# This script deploys pre-built client, manages PostgreSQL, and starts the backend server
 
 set -e
 
@@ -90,13 +90,6 @@ if tmux has-session -t $TMUX_SESSION 2>/dev/null; then
 fi
 
 # Deploy client build to nginx
-print_status "Checking if client build exists..."
-if [ ! -d "$CLIENT_DIR/dist" ]; then
-    print_error "Client build not found at $CLIENT_DIR/dist"
-    print_warning "Please run 'npm run build' in the client directory first"
-    exit 1
-fi
-
 print_status "Deploying client to nginx at $NGINX_DEPLOY_PATH..."
 if [ ! -d "$NGINX_DEPLOY_PATH" ]; then
     print_warning "Nginx deploy path does not exist, creating it..."
