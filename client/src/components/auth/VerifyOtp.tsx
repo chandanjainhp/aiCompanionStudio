@@ -24,15 +24,15 @@ export default function VerifyOtp() {
   const location = useLocation();
   const { toast } = useToast();
 
-  const { 
-    verifyOTP, 
-    resendOTP, 
-    isLoading, 
-    otpMode, 
-    otpEmail, 
-    otpName, 
-    otpSent, 
-    clearOTPState, 
+  const {
+    verifyOTP,
+    resendOTP,
+    isLoading,
+    otpMode,
+    otpEmail,
+    otpName,
+    otpSent,
+    clearOTPState,
     _isHydrated,
     loginMethod,
   } = useAuthStore();
@@ -41,7 +41,7 @@ export default function VerifyOtp() {
   const stateName = (location.state as Record<string, unknown>)?.name as string | undefined;
   const email = otpEmail || stateEmail;
   const name = otpName || stateName;
-  const mode = otpMode || ((location.state as Record<string, unknown>)?.mode as 'register' | 'login' | undefined);
+  const mode = otpMode || ((location.state as Record<string, unknown>)?.mode as 'register' | 'login' | 'reset_password' | undefined);
 
   // CRITICAL: All hooks must be called unconditionally, before any early returns
   const [otp, setOtp] = useState('');
@@ -81,6 +81,7 @@ export default function VerifyOtp() {
     console.log('✅ [VerifyOtp] State validated. Mode=%s, Email=%s', mode, email);
   }, [_isHydrated, email, mode, otpSent, loginMethod, navigate, clearOTPState]);
 
+
   useEffect(() => {
     if (timer <= 0) return;
     const t = setTimeout(() => setTimer((v) => v - 1), 1000);
@@ -116,10 +117,10 @@ export default function VerifyOtp() {
 
     try {
       console.log('🔐 [VerifyOtp] Verifying OTP. Mode=%s', mode);
-      await verifyOTP(email!, otp, mode as 'register' | 'login', name);
-      
+      await verifyOTP(email!, otp, mode as 'register' | 'login' | 'reset_password', name);
+
       console.log('✅ [VerifyOtp] OTP verified successfully. Mode=%s', mode);
-      
+
       if (mode === 'register') {
         toast({
           title: 'Success',
@@ -134,6 +135,12 @@ export default function VerifyOtp() {
           description: 'Logged in successfully',
         });
         navigate('/dashboard');
+      } else if (mode === 'reset_password') {
+        toast({
+          title: 'Verified',
+          description: 'Please set your new password',
+        });
+        navigate('/reset-password');
       }
     } catch (err: Error | unknown) {
       const count = attempts + 1;
@@ -235,15 +242,15 @@ export default function VerifyOtp() {
                 timer > 60
                   ? 'bg-blue-100 text-blue-700'
                   : timer > 0
-                  ? 'bg-orange-100 text-orange-700'
-                  : 'bg-red-100 text-red-700'
+                    ? 'bg-orange-100 text-orange-700'
+                    : 'bg-red-100 text-red-700'
               )}
             >
               {timer > 0
                 ? `${Math.floor(timer / 60)}:${String(timer % 60).padStart(
-                    2,
-                    '0'
-                  )}`
+                  2,
+                  '0'
+                )}`
                 : 'OTP expired'}
             </div>
 

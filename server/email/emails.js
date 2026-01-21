@@ -40,7 +40,7 @@ export const sendWelcomeEmail = async (email, name) => {
   console.log(`Sending welcome email to ${email}...`);  // Debug log
   return sendEmail({
     to: email,
-    subject: "Welcome to TMS",
+    subject: "Welcome to AI Companion Studio",
     html: `<h1>Welcome, ${name}!</h1><p>We're glad to have you with us.</p>`,
     category: "Welcome Email",
   });
@@ -49,10 +49,10 @@ export const sendWelcomeEmail = async (email, name) => {
 // Send password reset request email
 export const sendPasswordResetEmail = async (email, resetURL) => {
   // Debug log to verify email
-  console.log(`Sending password reset request email to: ${email}`); 
-  
+  console.log(`Sending password reset request email to: ${email}`);
+
   // Debug log to verify the reset URL
-  console.log(`Password reset URL: ${resetURL}`); 
+  console.log(`Password reset URL: ${resetURL}`);
 
   // Send the email
   return sendEmail({
@@ -66,7 +66,7 @@ export const sendPasswordResetEmail = async (email, resetURL) => {
 
 // Send password reset success email
 export const sendResetSuccessEmail = async (email) => {
-  
+
   console.log(`Sending password reset success email to ${email}...`);  // Debug log
   return sendEmail({
     to: email,
@@ -81,7 +81,7 @@ export const sendPasswordResetOTP = async (email, otp) => {
   console.log(`Sending password reset OTP email to ${email}...`);  // Debug log
   return sendEmail({
     to: email,
-    subject: "Admin Password Reset OTP - TMS",
+    subject: "Admin Password Reset OTP - AI Companion Studio",
     html: PASSWORD_RESET_OTP_TEMPLATE.replace("{resetOTP}", otp),
     category: "Password Reset OTP",
   });
@@ -92,7 +92,7 @@ export const sendPasswordResetOTPEmail = async (email, otp) => {
   console.log(`Sending password reset OTP email to ${email}...`);  // Debug log
   return sendEmail({
     to: email,
-    subject: "Password Reset OTP - TMS",
+    subject: "Password Reset OTP - AI Companion Studio",
     html: PASSWORD_RESET_OTP_TEMPLATE.replace("{resetOTP}", otp),
     category: "Password Reset OTP",
   });

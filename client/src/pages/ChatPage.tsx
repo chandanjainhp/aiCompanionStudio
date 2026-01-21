@@ -1,30 +1,28 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Settings,
-  Plus,
-  Trash2,
-  Edit,
-  MessageSquare,
-} from 'lucide-react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import AddIcon from '@mui/icons-material/Add';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import MenuIcon from '@mui/icons-material/Menu';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { ChatMessages, ChatInput, ChatEmptyState } from '@/components/chat';
 import { useProjectsStore } from '@/store/projectsStore';
 import { useUIStore } from '@/store/uiStore';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { isToday, isYesterday, subDays, isAfter } from 'date-fns';
 
 export default function ChatPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+
   const {
     projects,
     currentProject,
@@ -33,482 +31,271 @@ export default function ChatPage() {
     currentConversation,
     createConversation: createConversationInStore,
     setCurrentConversation,
-    addMessage,
     updateConversation,
     deleteConversation,
     fetchConversations,
-    fetchConversationMessages,
     sendMessage,
     fetchProjects,
   } = useProjectsStore();
+
   const { projectSidebarOpen, toggleProjectSidebar } = useUIStore();
-
   const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingContent, setStreamingContent] = useState('');
-  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
-  const [isLoadingProject, setIsLoadingProject] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
-  const [conversationsLoaded, setConversationsLoaded] = useState(false);
-  const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [newTitle, setNewTitle] = useState('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // First, fetch projects if needed - only once on mount
+  // States for renaming
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    if (!hasInitialized && (!projects || projects.length === 0)) {
-      setIsLoadingProject(true);
-      setHasInitialized(true);
-      fetchProjects().finally(() => setIsLoadingProject(false));
+    if (editingId && editInputRef.current) {
+      editInputRef.current.focus();
     }
-  }, [hasInitialized, projects, fetchProjects]);
+  }, [editingId]);
 
-  // Load conversations when project changes
   useEffect(() => {
-    if (projectId && currentProject) {
-      console.log('📚 [ChatPage] Loading conversations for project:', projectId);
-      setConversationsLoaded(false);
-      fetchConversations(projectId)
-        .then(() => {
-          setConversationsLoaded(true);
-        })
-        .catch((error) => {
-          console.error('Failed to load conversations:', error);
-          setConversationsLoaded(true); // Still mark as loaded even if error
-        });
-    }
-  }, [projectId, currentProject, fetchConversations]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        if (!projectSidebarOpen) toggleProjectSidebar();
+        else setSidebarCollapsed(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [projectSidebarOpen, toggleProjectSidebar]);
 
-  // Load messages when current conversation changes
   useEffect(() => {
-    if (projectId && currentConversation?.id && !currentConversation.messages?.length) {
-      console.log('📚 [ChatPage] Loading messages for conversation:', currentConversation.id);
-      fetchConversationMessages(projectId, currentConversation.id)
-        .catch((error) => {
-          console.error('❌ [ChatPage] Failed to load conversation messages:', error);
-          toast({
-            title: 'Failed to load messages',
-            description: 'Could not load chat history for this conversation',
-            variant: 'destructive',
-          });
-        });
-    }
-  }, [projectId, currentConversation?.id, currentConversation?.messages?.length, fetchConversationMessages, toast]);
+    if (projects.length === 0) fetchProjects();
+  }, [projects.length, fetchProjects]);
 
-  // Set current project on mount or when projects change
   useEffect(() => {
     if (projectId && projects.length > 0) {
       const project = projects.find((p) => p.id === projectId);
       if (project) {
         setCurrentProject(project);
-        // Set first conversation if none selected yet and conversations are loaded
-        if (conversationsLoaded) {
-          const projectConversations = conversations.filter(
-            (c) => c.projectId === projectId
-          );
-          if (projectConversations.length > 0 && !currentConversation) {
-            setCurrentConversation(projectConversations[0]);
-          }
-        }
+        fetchConversations(projectId);
       } else {
-        console.error('❌ [ChatPage] Project not found in list. Available projects:', projects.map(p => p.id));
-        toast({
-          title: 'Project Not Found',
-          description: 'This project does not exist or you do not have access to it.',
-          variant: 'destructive',
-        });
         navigate('/dashboard');
       }
-    } else if (projectId && projects.length === 0) {
-      console.warn('⚠️  [ChatPage] Projects not yet loaded. Waiting...');
     }
-  }, [projectId, projects, conversations, currentConversation, conversationsLoaded, navigate, setCurrentProject, setCurrentConversation, toast]);
+  }, [projectId, projects, navigate, setCurrentProject, fetchConversations]);
 
-  const projectConversations = conversations
-    .filter((c) => c.projectId === projectId)
-    .reduce((unique, conv) => {
-      // Deduplicate by ID - keep most recent version
-      const existing = unique.find(c => c.id === conv.id);
-      if (!existing) {
-        unique.push(conv);
-      } else if (new Date(conv.updatedAt) > new Date(existing.updatedAt)) {
-        unique[unique.indexOf(existing)] = conv;
-      }
-      return unique;
-    }, [] as typeof conversations);
+  const groupedConversations = useMemo(() => {
+    const projectConvs = conversations.filter((c) => c.projectId === projectId);
+    const now = new Date();
+    const sevenDaysAgo = subDays(now, 7);
 
-  const handleNewConversation = async () => {
-    if (!projectId) return;
+    return {
+      TODAY: projectConvs.filter(c => isToday(new Date(c.updatedAt))),
+      YESTERDAY: projectConvs.filter(c => isYesterday(new Date(c.updatedAt))),
+      'PREVIOUS 7 DAYS': projectConvs.filter(c => {
+        const date = new Date(c.updatedAt);
+        return !isToday(date) && !isYesterday(date) && isAfter(date, sevenDaysAgo);
+      }),
+    };
+  }, [conversations, projectId]);
 
+  const handleRename = async (id: string) => {
+    if (!editValue.trim() || !projectId) return;
     try {
-      setIsLoadingConversations(true);
-      console.log('🚀 [handleNewConversation] Starting conversation creation...');
-      
-      // ✅ Step 1: Create conversation via store
-      const newConversation = await createConversationInStore(projectId);
-      
-      // 🔴 CRITICAL VALIDATION: Ensure we got a real conversation with ID
-      if (!newConversation || !newConversation.id) {
-        console.error('❌ [handleNewConversation] Store returned invalid conversation:', newConversation);
-        throw new Error('Failed to create conversation - no ID returned from server');
-      }
-      
-      // 🔴 CRITICAL VALIDATION: Reject temporary IDs (all digits, timestamp-like)
-      if (/^\d{13,}$/.test(newConversation.id)) {
-        console.error('❌ [handleNewConversation] Store returned temporary ID:', newConversation.id);
-        throw new Error('Server returned temporary ID. Please try again.');
-      }
-      
-      console.log('✅ [handleNewConversation] Conversation created with real ID:', newConversation.id);
-      
-      // ✅ Step 2: Explicitly set current conversation in UI state
-      console.log('🔄 [handleNewConversation] Setting current conversation...');
-      setCurrentConversation(newConversation);
-      
-      // ✅ Step 3: Verify conversation is now active
-      console.log('✅ [handleNewConversation] Conversation is now active and ready for messages');
-      
-      toast({
-        title: 'Success',
-        description: 'New conversation created',
-      });
-    } catch (error: Error | unknown) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to create conversation';
-      console.error('❌ [handleNewConversation] Complete error:', errorMsg);
-      console.error('❌ [handleNewConversation] Error details:', error);
-      
-      // Clear any partial state
-      setCurrentConversation(null);
-      
-      toast({
-        title: 'Error',
-        description: errorMsg,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingConversations(false);
+      await updateConversation(projectId, id, { title: editValue.trim() });
+      setEditingId(null);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to rename chat", variant: "destructive" });
     }
   };
 
-  const handleSendMessage = useCallback(
-    async (content: string) => {
-      if (!projectId) {
-        console.error('❌ [handleSendMessage] No project ID');
-        toast({
-          title: 'Error',
-          description: 'Project ID is missing',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // � AUTO-CREATE CONVERSATION if none selected
-      let conversationToUse = currentConversation;
-      if (!conversationToUse) {
-        console.log('💬 [handleSendMessage] No conversation exists, auto-creating one...');
-        try {
-          // Use first 50 chars of message as conversation title
-          const conversationTitle = content.length > 50 ? content.substring(0, 50) + '...' : content;
-          conversationToUse = await createConversationInStore(projectId, conversationTitle);
-          
-          if (!conversationToUse || !conversationToUse.id) {
-            throw new Error('Failed to create conversation');
-          }
-          
-          // Set as current conversation for future messages
-          setCurrentConversation(conversationToUse);
-          
-          // 🔄 Refresh conversations list to ensure new conversation appears in sidebar
-          await fetchConversations(projectId);
-          
-          console.log('✅ [handleSendMessage] Auto-created conversation:', conversationToUse.id, 'with title:', conversationTitle);
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : 'Failed to create conversation';
-          console.error('❌ [handleSendMessage] Auto-create failed:', errorMsg);
-          toast({
-            title: 'Error',
-            description: 'Could not create conversation. Please try again.',
-            variant: 'destructive',
-          });
-          return;
-        }
-      }
-
-      // 🔴 CRITICAL: Validate conversation has valid ID (not temporary)
-      if (!conversationToUse.id) {
-        console.error('❌ [handleSendMessage] Conversation has no ID');
-        setCurrentConversation(null);
-        toast({
-          title: 'Error',
-          description: 'Invalid conversation. Please create a new one.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // 🔴 CRITICAL: Reject temporary IDs (all digits, 13+ chars = timestamp)
-      if (/^\d{13,}$/.test(conversationToUse.id)) {
-        console.error('❌ [handleSendMessage] Conversation has temporary ID:', conversationToUse.id);
-        setCurrentConversation(null);
-        toast({
-          title: 'Error',
-          description: 'Conversation was not properly created. Please create a new one.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      console.log('✅ [handleSendMessage] Pre-flight validation passed');
-      console.log('📤 [handleSendMessage] Sending to:', {
-        projectId,
-        conversationId: conversationToUse.id,
-        contentLength: content.length,
-      });
-
-      setIsStreaming(true);
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!projectId) return;
+    if (confirm("Are you sure you want to delete this conversation?")) {
       try {
-        // Use store's sendMessage which handles both user and assistant messages
-        await sendMessage(
-          projectId,
-          conversationToUse.id,
-          content
-        );
-
-        console.log('✅ [handleSendMessage] Message sent and response received');
-      } catch (error: unknown) {
-        const errorMsg = error instanceof Error ? error.message : 'Failed to send message';
-        
-        console.error('❌ [handleSendMessage] Send failed:', errorMsg);
-
-        // Check for specific backend errors
-        if (error instanceof Error && (error.message.includes('403') || error.message.includes('Project not found'))) {
-          const msg = 'Project not found or you do not have access. Redirecting to dashboard...';
-          console.error('❌ [handleSendMessage] Project access denied:', msg);
-          
-          // Clear conversation state
-          setCurrentConversation(null);
-          
-          // Redirect to dashboard
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 2000);
-        } else if (error instanceof Error && error.message.includes('Conversation not found')) {
-          // Handle conversation deleted or not found
-          console.error('❌ [handleSendMessage] Conversation deleted or not found');
-          setCurrentConversation(null);
-        }
-        
-        toast({
-          title: 'Error',
-          description: errorMsg,
-          variant: 'destructive',
-        });
-      } finally {
-        setIsStreaming(false);
-        setStreamingContent('');
+        await deleteConversation(projectId, id);
+        if (currentConversation?.id === id) setCurrentConversation(null);
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to delete", variant: "destructive" });
       }
-    },
-    [projectId, sendMessage, navigate, toast, setCurrentConversation, createConversationInStore, fetchConversations, currentConversation]
-  );
-
-  const handleStopStreaming = () => {
-    setIsStreaming(false);
-    if (streamingContent && currentConversation) {
-      addMessage(currentConversation.id, {
-        role: 'assistant',
-        content: streamingContent,
-      });
     }
-    setStreamingContent('');
   };
 
-  if (!currentProject) {
-    return null;
-  }
+  const handleSendMessage = useCallback(async (content: string) => {
+    if (!projectId) return;
+    let conv = currentConversation;
+    if (!conv) {
+      conv = await createConversationInStore(projectId, content.substring(0, 40));
+      setCurrentConversation(conv);
+    }
+    setIsStreaming(true);
+    try {
+      await sendMessage(projectId, conv.id, content);
+    } finally {
+      setIsStreaming(false);
+    }
+  }, [projectId, currentConversation, createConversationInStore, setCurrentConversation, sendMessage]);
+
+  if (!currentProject) return null;
 
   return (
-    <div className="h-screen flex overflow-hidden">
-      {/* Project Sidebar */}
-      <AnimatePresence initial={false}>
-        {projectSidebarOpen && (
-          <motion.aside
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 280, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="h-full border-r border-border bg-background flex flex-col flex-shrink-0"
-          >
-            {/* Project Header */}
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold truncate">{currentProject.name}</h2>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link to={`/projects/${projectId}/settings`}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>Project settings</TooltipContent>
-                </Tooltip>
+    <TooltipProvider>
+      <div className="h-screen flex overflow-hidden bg-[#0B0F1A]">
+        <aside
+          className={cn(
+            "h-screen flex-shrink-0 bg-[#0E1324] border-r border-white/10 flex flex-col transition-all duration-300 ease-in-out z-30",
+            !projectSidebarOpen ? "w-0 opacity-0 -translate-x-full pointer-events-none" : sidebarCollapsed ? "w-[72px]" : "w-[280px]"
+          )}
+        >
+          <div className="h-16 flex items-center px-4 border-b border-white/10 shrink-0">
+            {!sidebarCollapsed ? (
+              <div className="flex items-center gap-3 w-full">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shrink-0">
+                  <AutoAwesomeIcon sx={{ fontSize: 16, color: 'white' }} />
+                </div>
+                <span className="font-bold text-white truncate text-sm tracking-tight">{currentProject.name}</span>
               </div>
-              <Button
-                onClick={handleNewConversation}
-                className="w-full gap-2"
-                variant="outline"
-                disabled={isLoadingConversations}
-              >
-                <Plus className="w-4 h-4" />
-                {isLoadingConversations ? 'Creating...' : 'New Conversation'}
-              </Button>
-            </div>
+            ) : (
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center mx-auto">
+                <AutoAwesomeIcon sx={{ fontSize: 16, color: 'white' }} />
+              </div>
+            )}
+          </div>
 
-            {/* Conversations List */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
-              <ScrollArea className="flex-1 w-full">
-                <div className="px-2 py-1 space-y-1 pr-4">
-                  {projectConversations.map((conversation) => (
-                  <div
-                    key={conversation.id}
-                    className={cn(
-                      'flex items-center justify-between gap-2 p-2 rounded-lg cursor-pointer transition-colors group',
-                      'hover:bg-muted',
-                      currentConversation?.id === conversation.id && 'bg-muted'
-                    )}
-                    onClick={() => setCurrentConversation(conversation)}
-                  >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <MessageSquare className="w-4 h-4 shrink-0 text-muted-foreground" />
-                      <div className="flex-1 min-w-0">
-                        {renamingId === conversation.id ? (
-                          <input
-                            type="text"
-                            value={newTitle}
-                            onChange={(e) => setNewTitle(e.target.value)}
-                            onBlur={() => {
-                              if (newTitle.trim()) {
-                                updateConversation(projectId, conversation.id, newTitle.trim());
-                              }
-                              setRenamingId(null);
-                              setNewTitle('');
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                if (newTitle.trim()) {
-                                  updateConversation(projectId, conversation.id, newTitle.trim());
-                                }
-                                setRenamingId(null);
-                                setNewTitle('');
-                              } else if (e.key === 'Escape') {
-                                setRenamingId(null);
-                                setNewTitle('');
-                              }
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-full text-sm font-medium bg-background border border-primary rounded px-2 py-1 text-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                            autoFocus
-                            placeholder="Enter new title"
-                            title="Rename conversation"
-                          />
-                        ) : (
+          <div className="p-3">
+            <Button
+              onClick={() => createConversationInStore(projectId!)}
+              variant="outline"
+              className={cn(
+                "w-full bg-white/5 border-white/10 hover:bg-white/10 text-white transition-all",
+                sidebarCollapsed ? "p-0 h-10 w-10 mx-auto justify-center" : "justify-start gap-3 px-3"
+              )}
+            >
+              <Plus className="w-4 h-4" />
+              {!sidebarCollapsed && <span className="text-xs font-medium">New Chat</span>}
+            </Button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-2 py-2 space-y-6 custom-scrollbar overflow-x-hidden">
+            {(Object.entries(groupedConversations) as [keyof typeof groupedConversations, any[]]).map(([label, items]) => (
+              <div key={label} className={cn(items.length === 0 && "hidden")}>
+                {!sidebarCollapsed && (
+                  <h3 className="px-3 mb-2 text-[10px] font-bold tracking-[0.15em] text-white/30 uppercase">
+                    {label}
+                  </h3>
+                )}
+                <div className="space-y-0.5">
+                  {items.map((conv) => {
+                    const isActive = currentConversation?.id === conv.id;
+                    const isEditing = editingId === conv.id;
+
+                    const content = (
+                      <div
+                        onClick={() => !isEditing && setCurrentConversation(conv)}
+                        className={cn(
+                          "relative group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200",
+                          isActive
+                            ? "bg-white/10 text-white border-l-2 border-blue-500 rounded-l-none"
+                            : "text-white/50 hover:bg-white/5 hover:text-white",
+                          sidebarCollapsed && "justify-center px-0 h-10 w-10 mx-auto"
+                        )}
+                      >
+                        <ChatBubbleOutlineIcon sx={{ fontSize: 16 }} className={cn("shrink-0", isActive && "text-blue-400")} />
+
+                        {!sidebarCollapsed && (
                           <>
-                            <p className="text-sm font-medium truncate">
-                              {conversation.title}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {format(typeof conversation.updatedAt === 'string' ? new Date(conversation.updatedAt) : (conversation.updatedAt as Date), 'MMM d, h:mm a')}
-                            </p>
+                            {isEditing ? (
+                              <input
+                                ref={editInputRef}
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleRename(conv.id);
+                                  if (e.key === 'Escape') setEditingId(null);
+                                }}
+                                onBlur={() => handleRename(conv.id)}
+                                className="flex-1 bg-white/10 border-none outline-none text-xs rounded px-1 text-white h-5 min-w-0"
+                              />
+                            ) : (
+                              <span className="text-xs font-medium truncate flex-1 leading-tight pr-2">
+                                {conv.title || "New Chat"}
+                              </span>
+                            )}
+
+                            {/* Action Icons: Only show if not editing and hovered */}
+                            {!isEditing && (
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingId(conv.id);
+                                    setEditValue(conv.title || "New Chat");
+                                  }}
+                                  className="p-1 hover:text-blue-400 transition-colors"
+                                >
+                                  <EditIcon sx={{ fontSize: 12 }} />
+                                </button>
+                                <button
+                                  onClick={(e) => handleDelete(e, conv.id)}
+                                  className="p-1 hover:text-red-400 transition-colors"
+                                >
+                                  <DeleteIcon sx={{ fontSize: 12 }} />
+                                </button>
+                              </div>
+                            )}
                           </>
                         )}
                       </div>
-                    </div>
-                    <div className="flex gap-0.5 shrink-0 pointer-events-auto">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0 hover:bg-muted-foreground/20"
-                        title="Rename"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          setRenamingId(conversation.id);
-                          setNewTitle(conversation.title);
-                        }}
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
-                        title="Delete"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          try {
-                            await deleteConversation(projectId, conversation.id);
-                            toast({
-                              title: 'Deleted',
-                              description: 'Conversation deleted',
-                            });
-                          } catch (error: Error | unknown) {
-                            const errorMsg = error instanceof Error ? error.message : 'Failed to delete';
-                            console.error('❌ [ChatPage] Delete failed:', errorMsg);
-                            toast({
-                              title: 'Error',
-                              description: errorMsg,
-                              variant: 'destructive',
-                            });
-                          }
-                        }}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                    );
+
+                    return sidebarCollapsed ? (
+                      <Tooltip key={conv.id} delayDuration={0}>
+                        <TooltipTrigger asChild>{content}</TooltipTrigger>
+                        <TooltipContent side="right" className="bg-[#161B22] border-white/10 text-[11px] font-medium text-white shadow-xl">
+                          {conv.title || "New Chat"}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <div key={conv.id}>{content}</div>
+                    );
+                  })}
                 </div>
-              </ScrollArea>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </aside>
 
-      {/* Sidebar Toggle Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-12 w-6 rounded-none border-r border-border flex-shrink-0 hover:bg-muted"
-        onClick={toggleProjectSidebar}
-        title={projectSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
-      >
-        {projectSidebarOpen ? (
-          <ChevronLeft className="w-4 h-4" />
-        ) : (
-          <ChevronRight className="w-4 h-4" />
-        )}
-      </Button>
+        <div className="flex-1 flex flex-col min-w-0 h-full relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute left-4 top-4 z-40 h-8 w-8 bg-[#0B0F1A]/80 backdrop-blur border border-white/10 text-white/60 hover:text-white shadow-xl transition-all"
+            onClick={toggleProjectSidebar}
+          >
+            {projectSidebarOpen ? <ChevronLeftIcon sx={{ fontSize: 16 }} /> : <MenuIcon sx={{ fontSize: 16 }} />}
+          </Button>
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col h-full">
-        {(currentConversation?.messages?.length ?? 0) === 0 && !isStreaming ? (
-          <ChatEmptyState
-            projectName={currentProject.name}
-            onSuggestionClick={handleSendMessage}
-          />
-        ) : (
-          <ChatMessages
-            messages={currentConversation?.messages || []}
-            isStreaming={isStreaming}
-            streamingContent={streamingContent}
-          />
-        )}
-        <ChatInput
-          onSend={handleSendMessage}
-          onStop={handleStopStreaming}
-          isStreaming={isStreaming}
-          placeholder={`Message ${currentProject.name}...`}
-        />
+          <div className="flex-1 overflow-hidden relative">
+            {!currentConversation?.messages?.length && !isStreaming ? (
+              <ChatEmptyState projectName={currentProject.name} onSuggestionClick={handleSendMessage} />
+            ) : (
+              <ChatMessages
+                messages={currentConversation?.messages || []}
+                isStreaming={isStreaming}
+                streamingContent=""
+              />
+            )}
+          </div>
+
+          <div className="max-w-3xl w-full mx-auto px-4 pb-2">
+            <ChatInput
+              onSend={handleSendMessage}
+              onStop={() => setIsStreaming(false)}
+              isStreaming={isStreaming}
+              placeholder={`Message ${currentProject.name}...`}
+            />
+            <div className="h-4" />
+          </div>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

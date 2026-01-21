@@ -233,7 +233,7 @@ export function RegisterForm() {
                   />
                 )}
               />
-              <Label>I agree to Terms & Privacy Policy</Label>
+              <Label>I agree to <Link to="/terms" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Terms & Privacy Policy</Link></Label>
             </div>
 
             {errors.acceptTerms && (

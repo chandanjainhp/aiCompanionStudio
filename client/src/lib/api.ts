@@ -81,7 +81,7 @@ class ApiClient {
     const startTime = Date.now();
     const method = response.headers.get('x-method') || 'UNKNOWN';
     const endpoint = response.url.replace(API_URL, '') || response.url;
-    
+
     console.log('📡 [api] Response received:', {
       url: response.url,
       status: response.status,
@@ -160,7 +160,7 @@ class ApiClient {
     });
 
     const data = await this.handleResponse<ApiResponse<LoginResponse>>(response);
-    
+
     // Save token if successful
     if (data.data?.accessToken) {
       this.setToken(data.data.accessToken);
@@ -195,7 +195,7 @@ class ApiClient {
     });
 
     const data = await this.handleResponse<ApiResponse<LoginResponse>>(response);
-    
+
     // Save token if successful
     if (data.data?.accessToken) {
       this.setToken(data.data.accessToken);
@@ -231,7 +231,7 @@ class ApiClient {
       });
 
       const data = await this.handleResponse<ApiResponse<LoginResponse>>(response);
-      
+
       console.log('✅ [api.login] Login response data:', {
         success: data.success,
         hasData: !!data.data,
@@ -261,7 +261,7 @@ class ApiClient {
   async getProfile(): Promise<ApiResponse<User>> {
     console.log('📡 [api.getProfile] INITIATING REQUEST TO /auth/me');
     console.log('📡 [api.getProfile] Headers:', this.getHeaders());
-    
+
     const response = await fetch(`${API_URL}/auth/me`, {
       method: 'GET',
       headers: this.getHeaders(),
@@ -278,7 +278,7 @@ class ApiClient {
 
   async updateUserProfile(data: { name?: string; phoneNumber?: string }): Promise<ApiResponse<User>> {
     console.log('📡 [api.updateUserProfile] INITIATING REQUEST TO /users/profile');
-    
+
     const response = await fetch(`${API_URL}/users/profile`, {
       method: 'PATCH',
       headers: this.getHeaders(),
@@ -296,7 +296,7 @@ class ApiClient {
 
   async updatePassword(currentPassword: string, newPassword: string): Promise<ApiResponse> {
     console.log('📡 [api.updatePassword] INITIATING REQUEST TO /users/password');
-    
+
     const response = await fetch(`${API_URL}/users/password`, {
       method: 'PATCH',
       headers: this.getHeaders(),
@@ -304,6 +304,24 @@ class ApiClient {
     });
 
     console.log('📡 [api.updatePassword] RESPONSE RECEIVED:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+    });
+
+    return this.handleResponse(response);
+  }
+
+  async resetPassword(newPassword: string): Promise<ApiResponse> {
+    console.log('📡 [api.resetPassword] INITIATING REQUEST TO /users/reset-password');
+
+    const response = await fetch(`${API_URL}/users/reset-password`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ newPassword }),
+    });
+
+    console.log('📡 [api.resetPassword] RESPONSE RECEIVED:', {
       status: response.status,
       statusText: response.statusText,
       ok: response.ok,
@@ -340,7 +358,7 @@ class ApiClient {
     });
 
     const data = await this.handleResponse<ApiResponse<LoginResponse>>(response);
-    
+
     // Save new token if successful
     if (data.data?.accessToken) {
       this.setToken(data.data.accessToken);
@@ -357,7 +375,7 @@ class ApiClient {
     });
 
     const result = await this.handleResponse<ApiResponse<ProjectListResponse>>(response);
-    
+
     // VALIDATE: All projects have required fields
     if (result.data?.projects) {
       if (!isValidProjectArray(result.data.projects)) {
@@ -366,7 +384,7 @@ class ApiClient {
       }
       console.log('✅ [api] Validated', result.data.projects.length, 'projects');
     }
-    
+
     return result.data!;
   }
 
@@ -378,19 +396,19 @@ class ApiClient {
     });
 
     const result = await this.handleResponse<ApiResponse<Project>>(response);
-    
+
     // VALIDATE: Returned project has all required fields
     if (!isValidProject(result.data)) {
       console.error('❌ [api] Invalid project data from server:', result.data);
       throw new Error('Server returned invalid project data');
     }
-    
+
     // VALIDATE: New projects must have conversationCount: 0
     if (result.data.conversationCount !== 0) {
       console.warn('⚠️ [api] New project should have conversationCount: 0, got:', result.data.conversationCount);
       result.data.conversationCount = 0;
     }
-    
+
     console.log('✅ [api] Created project:', result.data.id);
     return result.data;
   }
@@ -402,13 +420,13 @@ class ApiClient {
     });
 
     const result = await this.handleResponse<ApiResponse<Project>>(response);
-    
+
     // VALIDATE: Returned project has all required fields
     if (!isValidProject(result.data)) {
       console.error('❌ [api] Invalid project data from server:', result.data);
       throw new Error('Server returned invalid project data');
     }
-    
+
     console.log('✅ [api] Retrieved project:', result.data.id);
     return result.data;
   }
@@ -424,13 +442,13 @@ class ApiClient {
     });
 
     const result = await this.handleResponse<ApiResponse<Project>>(response);
-    
+
     // VALIDATE: Returned project has all required fields
     if (!isValidProject(result.data)) {
       console.error('❌ [api] Invalid project data from server:', result.data);
       throw new Error('Server returned invalid project data');
     }
-    
+
     console.log('✅ [api] Updated project:', result.data.id);
     return result.data;
   }
@@ -523,7 +541,7 @@ class ApiClient {
       projectId,
       conversationId,
     });
-    
+
     const response = await fetch(
       `${API_URL}/projects/${projectId}/conversations/${conversationId}`,
       {
@@ -541,7 +559,7 @@ class ApiClient {
       conversationId,
       token: this.getToken() ? '***present***' : '❌ MISSING',
     });
-    
+
     const response = await fetch(
       `${API_URL}/projects/${projectId}/conversations/${conversationId}/messages`,
       {

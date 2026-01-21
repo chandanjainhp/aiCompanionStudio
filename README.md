@@ -1,6 +1,12 @@
 # 🚀 AI Companion Studio
 
-A full-stack web application for creating AI-powered projects and conversations with multiple LLM models via OpenRouter.ai.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Open Source](https://img.shields.io/badge/Open%20Source-Yes-brightgreen)
+![Status](https://img.shields.io/badge/Status-Active%20Development-success)
+
+**AI Companion Studio** is an open-source, full-stack platform for building and interacting with custom AI agents. Powered by **OpenRoute API**, it offers a unified interface for multiple LLMs.
+
+> 🌟 **Star us on GitHub:** [https://github.com/chandanjainhp/aiCompanionStudio](https://github.com/chandanjainhp/aiCompanionStudio)
 
 **Live Demo**: Coming soon  
 **Documentation**: See [ARCHITECTURE.md](./ARCHITECTURE.md) for system design  

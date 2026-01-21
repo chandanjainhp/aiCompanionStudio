@@ -1,78 +1,49 @@
 import { motion } from 'framer-motion';
-import { MessageSquare, Zap, Brain, Lightbulb, Code } from 'lucide-react';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 interface ChatEmptyStateProps {
   projectName?: string;
-  onSuggestionClick: (suggestion: string) => void;
+  onSuggestionClick?: (suggestion: string) => void;
 }
 
-const suggestions = [
-  {
-    icon: Lightbulb,
-    title: 'Brainstorm ideas',
-    prompt: 'Help me brainstorm creative ideas for my next project',
-  },
-  {
-    icon: Code,
-    title: 'Write code',
-    prompt: 'Write a Python function that sorts a list of numbers',
-  },
-  {
-    icon: Brain,
-    title: 'Explain a concept',
-    prompt: 'Explain how machine learning works in simple terms',
-  },
-  {
-    icon: Zap,
-    title: 'Quick task',
-    prompt: 'Summarize the key points of effective communication',
-  },
-];
-
-export function ChatEmptyState({ projectName, onSuggestionClick }: ChatEmptyStateProps) {
+export function ChatEmptyState({ projectName }: ChatEmptyStateProps) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Ambient Background Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-3xl opacity-50 pointer-events-none" />
+
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="text-center mb-8"
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="text-center relative z-10"
       >
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-          <MessageSquare className="w-8 h-8 text-primary" />
+        {/* Animated Orb / Avatar */}
+        <div className="relative w-24 h-24 mx-auto mb-8">
+          <motion.div
+            animate={{
+              scale: [1, 1.1, 1],
+              rotate: [0, 5, -5, 0],
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 blur-xl opacity-40 absolute top-0 left-0"
+          />
+          <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-background to-muted border border-white/10 shadow-2xl flex items-center justify-center backdrop-blur-md">
+            <AutoAwesomeIcon sx={{ fontSize: 40 }} className="text-indigo-400" />
+          </div>
         </div>
-        <h2 className="text-2xl font-bold mb-2">
-          {projectName ? `Chat with ${projectName}` : 'Start a conversation'}
+
+        <h2 className="text-4xl font-bold mb-4 tracking-tight bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
+          {projectName ? `Hello, ${projectName}` : 'Welcome'}
         </h2>
-        <p className="text-muted-foreground max-w-md">
-          Ask questions, get help with tasks, or just have a chat. Your AI assistant is ready to help.
+        <p className="text-lg text-muted-foreground/80 max-w-lg mx-auto leading-relaxed">
+          I'm ready to help you create, analyze, and explore. <br />What's on your mind today?
         </p>
       </motion.div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
-        {suggestions.map((suggestion, index) => (
-          <motion.button
-            key={suggestion.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
-            onClick={() => onSuggestionClick(suggestion.prompt)}
-            className="group flex items-start gap-3 p-4 rounded-xl border border-border bg-card hover:bg-accent hover:border-primary/50 transition-all text-left"
-          >
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-              <suggestion.icon className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm group-hover:text-primary transition-colors">
-                {suggestion.title}
-              </p>
-              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                {suggestion.prompt}
-              </p>
-            </div>
-          </motion.button>
-        ))}
-      </div>
     </div>
   );
 }

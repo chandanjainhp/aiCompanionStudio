@@ -4,7 +4,7 @@ export const VERIFICATION_EMAIL_TEMPLATE = `
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify Your Email - ChatForge</title>
+  <title>Verify Your Email - AI Companion Studio</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 0; background: linear-gradient(135deg, #f3f4f6 0%, #f9fafb 100%);">
   <div style="padding: 40px 20px 0;">
@@ -13,14 +13,14 @@ export const VERIFICATION_EMAIL_TEMPLATE = `
       <div style="display: inline-block; background: rgba(255,255,255,0.1); padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
         <span style="font-size: 24px;">⚡</span>
       </div>
-      <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">ChatForge</h1>
+      <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">AI Companion Studio</h1>
       <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 14px; font-weight: 500;">Verify Your Email Address</p>
     </div>
 
     <!-- Content -->
     <div style="background-color: #ffffff; padding: 40px 30px; border-radius: 0 0 12px 12px;">
       <p style="font-size: 16px; color: #374151; margin: 0 0 20px; font-weight: 500;">Hi there! 👋</p>
-      <p style="font-size: 15px; color: #6b7280; margin: 0 0 30px; line-height: 1.8;">Thank you for joining <strong>ChatForge</strong>! We're excited to have you on board. To complete your registration, please verify your email address using the code below.</p>
+      <p style="font-size: 15px; color: #6b7280; margin: 0 0 30px; line-height: 1.8;">Thank you for joining <strong>AI Companion Studio</strong>! We're excited to have you on board. To complete your registration, please verify your email address using the code below.</p>
 
       <!-- OTP Code Box -->
       <div style="background: linear-gradient(135deg, #f3f4f6 0%, #f9fafb 100%); border: 2px solid #e5e7eb; padding: 30px; border-radius: 12px; text-align: center; margin: 35px 0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);">
@@ -40,14 +40,14 @@ export const VERIFICATION_EMAIL_TEMPLATE = `
 
       <!-- Security Message -->
       <p style="font-size: 13px; color: #9ca3af; margin: 25px 0 0; line-height: 1.8;">
-        If you didn't create an account with ChatForge, please ignore this email. If you believe this is a mistake, <a href="mailto:support@chatforge.io" style="color: #4f46e5; text-decoration: none; font-weight: 600;">contact our support team</a>.
+        If you didn't create an account with AI Companion Studio, please ignore this email. If you believe this is a mistake, <a href="mailto:support@chatforge.io" style="color: #4f46e5; text-decoration: none; font-weight: 600;">contact our support team</a>.
       </p>
     </div>
 
     <!-- Footer -->
     <div style="text-align: center; padding: 30px 20px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0 0 8px;">Made with ❤️ by <strong style="color: #4f46e5;">ChatForge</strong></p>
-      <p style="margin: 0; opacity: 0.7;">© 2026 ChatForge. All rights reserved.</p>
+      <p style="margin: 0 0 8px;">Made with ❤️ by <strong style="color: #4f46e5;">AI Companion Studio</strong></p>
+      <p style="margin: 0; opacity: 0.7;">© 2026 AI Companion Studio. All rights reserved.</p>
     </div>
   </div>
 </body>
@@ -60,21 +60,21 @@ export const PASSWORD_RESET_SUCCESS_TEMPLATE = `
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Password Reset Successful - ChatForge</title>
+  <title>Password Reset Successful - AI Companion Studio</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 0; background: linear-gradient(135deg, #f3f4f6 0%, #f9fafb 100%);">
   <div style="padding: 40px 20px 0;">
     <!-- Header -->
     <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);">
       <div style="display: inline-block; background: rgba(255,255,255,0.1); padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 24px;">✓</div>
-      <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">ChatForge</h1>
+      <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">AI Companion Studio</h1>
       <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 14px; font-weight: 500;">Password Reset Successfully</p>
     </div>
 
     <!-- Content -->
     <div style="background-color: #ffffff; padding: 40px 30px; border-radius: 0 0 12px 12px;">
       <p style="font-size: 16px; color: #374151; margin: 0 0 20px; font-weight: 500;">Hi there! 👋</p>
-      <p style="font-size: 15px; color: #6b7280; margin: 0 0 30px; line-height: 1.8;">Your password has been successfully reset. You can now log in to your ChatForge account with your new password.</p>
+      <p style="font-size: 15px; color: #6b7280; margin: 0 0 30px; line-height: 1.8;">Your password has been successfully reset. You can now log in to your AI Companion Studio account with your new password.</p>
 
       <!-- Success Badge -->
       <div style="text-align: center; margin: 35px 0;">
@@ -108,8 +108,8 @@ export const PASSWORD_RESET_SUCCESS_TEMPLATE = `
 
     <!-- Footer -->
     <div style="text-align: center; padding: 30px 20px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0 0 8px;">Made with ❤️ by <strong style="color: #4f46e5;">ChatForge</strong></p>
-      <p style="margin: 0; opacity: 0.7;">© 2026 ChatForge. All rights reserved.</p>
+      <p style="margin: 0 0 8px;">Made with ❤️ by <strong style="color: #4f46e5;">AI Companion Studio</strong></p>
+      <p style="margin: 0; opacity: 0.7;">© 2026 AI Companion Studio. All rights reserved.</p>
     </div>
   </div>
 </body>
@@ -122,14 +122,14 @@ export const PASSWORD_RESET_REQUEST_TEMPLATE = `
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reset Your Password - ChatForge</title>
+  <title>Reset Your Password - AI Companion Studio</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 0; background: linear-gradient(135deg, #f3f4f6 0%, #f9fafb 100%);">
   <div style="padding: 40px 20px 0;">
     <!-- Header -->
     <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0; box-shadow: 0 10px 30px rgba(249, 115, 22, 0.2);">
       <div style="display: inline-block; background: rgba(255,255,255,0.1); padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 24px;">🔐</div>
-      <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">ChatForge</h1>
+      <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">AI Companion Studio</h1>
       <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 14px; font-weight: 500;">Reset Your Password</p>
     </div>
 
@@ -168,8 +168,8 @@ export const PASSWORD_RESET_REQUEST_TEMPLATE = `
 
     <!-- Footer -->
     <div style="text-align: center; padding: 30px 20px; color: #9ca3af; font-size: 12px;">
-      <p style="margin: 0 0 8px;">Made with ❤️ by <strong style="color: #4f46e5;">ChatForge</strong></p>
-      <p style="margin: 0; opacity: 0.7;">© 2026 ChatForge. All rights reserved.</p>
+      <p style="margin: 0 0 8px;">Made with ❤️ by <strong style="color: #4f46e5;">AI Companion Studio</strong></p>
+      <p style="margin: 0; opacity: 0.7;">© 2026 AI Companion Studio. All rights reserved.</p>
     </div>
   </div>
 </body>
@@ -186,7 +186,7 @@ export const PASSWORD_RESET_OTP_TEMPLATE = `
 </head>
 <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
   <div style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 50%, #ec4899 100%); padding: 30px 20px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">🔐 TMS - Password Reset OTP</h1>
+    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">🔐 AI Companion Studio - Password Reset OTP</h1>
   </div>
   <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <p style="font-size: 16px; color: #374151;">Hello Admin,</p>
@@ -201,7 +201,7 @@ export const PASSWORD_RESET_OTP_TEMPLATE = `
     <p style="font-size: 14px; color: #6b7280; background-color: #fee2e2; padding: 12px; border-left: 4px solid #ef4444; border-radius: 5px; margin: 20px 0;">
       🚨 If you didn't request this password reset, please contact support immediately at <strong>backupid849@gmail.com</strong>
     </p>
-    <p style="font-size: 16px; color: #374151; margin-top: 30px;">Best regards,<br><strong style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">TMS Admin Team</strong></p>
+    <p style="font-size: 16px; color: #374151; margin-top: 30px;">Best regards,<br><strong style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">AI Companion Studio Admin Team</strong></p>
   </div>
   <div style="text-align: center; margin-top: 20px; color: #9ca3af; font-size: 0.8em;">
     <p>This is an automated message, please do not reply to this email.</p>

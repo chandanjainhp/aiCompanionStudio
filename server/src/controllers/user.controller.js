@@ -9,7 +9,7 @@ import { prisma } from "../config/database.js";
 const updateUserAvatar = asyncHandler(async (req, res) => {
   try {
     console.log("Starting avatar upload...");
-    
+
     // Get the uploaded avatar file path from multer
     const avatarLocalPath = req.file?.path;
     console.log("Avatar local path:", avatarLocalPath);
@@ -33,7 +33,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     // Get user ID from JWT token (middleware sets req.user.userId)
     const userId = req.user?.userId;
     console.log("User ID:", userId);
-    
+
     if (!userId) {
       throw new UnauthorizedError("User not authenticated");
     }
@@ -57,7 +57,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     });
 
     console.log("Avatar upload successful for user:", userId);
-    
+
     // Return success response with updated user data
     return res.status(200).json(
       new ApiResponse(200, user, "Avatar updated successfully")
@@ -182,7 +182,7 @@ const setUserPassword = asyncHandler(async (req, res) => {
 
     // Import bcrypt for hashing
     const bcrypt = await import("bcryptjs");
-    
+
     // Hash new password
     const hashedPassword = await bcrypt.default.hash(newPassword, 10);
 
@@ -237,7 +237,7 @@ const updateUserPassword = asyncHandler(async (req, res) => {
 
     // Import bcrypt for password comparison
     const bcrypt = await import("bcryptjs");
-    
+
     // Verify current password
     const isPasswordCorrect = await bcrypt.default.compare(currentPassword, user.password);
     if (!isPasswordCorrect) {
@@ -277,4 +277,57 @@ const updateUserPassword = asyncHandler(async (req, res) => {
   }
 });
 
-export { updateUserAvatar, getUserProfile, updateUserProfile, setUserPassword, updateUserPassword };
+// Reset password (for forgot password flow)
+const resetPassword = asyncHandler(async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      throw new UnauthorizedError("User not authenticated");
+    }
+
+    // Validate input
+    if (!newPassword) {
+      throw new BadRequestError("New password is required");
+    }
+
+    // Validate new password strength
+    if (newPassword.length < 8) {
+      throw new BadRequestError("Password must be at least 8 characters");
+    }
+
+    // Import bcrypt for hashing
+    const bcrypt = await import("bcryptjs");
+
+    // Hash new password
+    const hashedPassword = await bcrypt.default.hash(newPassword, 10);
+
+    // Update password
+    // We don't check for old password because this is a reset flow
+    // Authentication is handled via the OTP verification that happened before this
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phoneNumber: true,
+        avatarUrl: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, updatedUser, "Password reset successfully"));
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    throw error;
+  }
+});
+
+export { updateUserAvatar, getUserProfile, updateUserProfile, setUserPassword, updateUserPassword, resetPassword };

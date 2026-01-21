@@ -4,6 +4,7 @@ import { config } from '../config/env.js';
 import { hashPassword, comparePassword } from '../utils/password.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 import { ConflictError, UnauthorizedError, NotFoundError } from '../utils/errors.js';
+import { sendWelcomeEmail } from '../../email/emails.js';
 
 /**
  * Register a new user
@@ -31,6 +32,14 @@ export const registerUser = async (email, password, name) => {
       chatUsageCount: 0,    // QUOTA: Start at 0 usage
     },
   });
+
+  // Send welcome email
+  try {
+    await sendWelcomeEmail(user.email, user.name);
+  } catch (emailError) {
+    console.warn('⚠️ Failed to send welcome email:', emailError.message);
+    // Don't block registration if email fails
+  }
 
   return {
     id: user.id,
@@ -69,18 +78,18 @@ export const loginUser = async (email, password) => {
     if (!user.password) {
       console.warn('⚠️  [auth.service.loginUser] User has no password set (likely OTP-registered):', email);
       console.log('💾 [auth.service.loginUser] Setting password for OTP-registered user...');
-      
+
       // Hash the provided password
       const passwordHash = await hashPassword(password);
-      
+
       // Update user with password
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: { password: passwordHash },
       });
-      
+
       console.log('✅ [auth.service.loginUser] Password set successfully for user:', email);
-      
+
       // Continue with the updated user
       const accessToken = generateAccessToken(updatedUser.id, updatedUser.email);
       console.log('✅ [auth.service.loginUser] Access token generated');
@@ -119,7 +128,7 @@ export const loginUser = async (email, password) => {
     // Verify password
     console.log('🔒 [auth.service.loginUser] Verifying password...');
     const isPasswordValid = await comparePassword(password, user.password);
-    
+
     if (!isPasswordValid) {
       console.warn('⚠️  [auth.service.loginUser] Password verification failed for user:', email);
       throw new UnauthorizedError('Invalid email or password');
@@ -287,6 +296,14 @@ export const loginWithOTP = async (email, name = '') => {
         email: user.email,
         isVerified: user.isVerified,
       });
+
+      // Send welcome email for new user
+      try {
+        await sendWelcomeEmail(user.email, user.name);
+      } catch (emailError) {
+        console.warn('⚠️ Failed to send welcome email:', emailError.message);
+        // Don't block login if email fails
+      }
     } else {
       console.log(`✅ [auth.service.loginWithOTP] Existing user found:`, {
         id: user.id,

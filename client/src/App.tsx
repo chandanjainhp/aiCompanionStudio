@@ -14,8 +14,12 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Pages
 import Index from "./pages/Index";
+import LandingPage from "./pages/LandingPage";
+import TermsOfService from "./pages/TermsOfService";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { OTPLogin } from "./pages/OTPLogin";
 import VerifyOtp from "@/pages/VerifyOtp";
 import Dashboard from "./pages/Dashboard";
@@ -73,13 +77,14 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          
+
           <AuthInitializer>
             <BrowserRouter>
               <Routes>
                 {/* ============ PUBLIC ROUTES ============ */}
                 {/* Landing page - no auth needed */}
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/terms" element={<TermsOfService />} />
 
                 {/* Auth routes - wrapped with PublicRoute guard */}
                 {/* PublicRoute redirects authenticated users to /dashboard */}
@@ -87,6 +92,7 @@ function App() {
                   <Route element={<AuthLayout />}>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/otp-login" element={<OTPLogin />} />
                   </Route>
                 </Route>
@@ -101,18 +107,22 @@ function App() {
                 </Route>
 
                 {/* ============ PROTECTED ROUTES ============ */}
-                {/* All routes here require authentication */}
+                {/* All routes here require authentication - DISABLED FOR NOW */}
                 {/* ProtectedRoute checks isAuthenticated and redirects to /login if needed */}
-                <Route element={<ProtectedRoute />}>
-                  <Route element={<MainLayout />}>
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/projects/:projectId/chat" element={<ChatPage />} />
-                    <Route path="/projects/:projectId/settings" element={<ProjectSettings />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/settings/security" element={<SecurityPage />} />
-                    <Route path="/settings/preferences" element={<PreferencesPage />} />
-                  </Route>
+                {/* <Route element={<ProtectedRoute />}> */}
+                <Route element={<MainLayout />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/projects/:projectId/chat" element={<ChatPage />} />
+                  <Route path="/projects/:projectId/settings" element={<ProjectSettings />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/settings/security" element={<SecurityPage />} />
+                  <Route path="/settings/preferences" element={<PreferencesPage />} />
                 </Route>
+                {/* Password Reset Route - Uses AuthLayout instead of MainLayout */}
+                <Route element={<AuthLayout />}>
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                </Route>
+                {/* </Route> */}
 
                 {/* ============ CATCH-ALL ============ */}
                 {/* 404 page for undefined routes */}

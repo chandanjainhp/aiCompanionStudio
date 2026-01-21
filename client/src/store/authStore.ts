@@ -14,7 +14,7 @@ interface AuthState {
   isLoading: boolean;
   accessToken: string | null;
   loginMethod: 'password' | 'otp' | null; // STRICT: Which login method is selected
-  otpMode: 'register' | 'login' | null;
+  otpMode: 'register' | 'login' | 'reset_password' | null;
   otpEmail: string | null;
   otpName: string | null;
   otpSent: boolean;
@@ -28,9 +28,10 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   sendRegistrationOTP: (name: string, email: string, password: string) => Promise<void>;
-  sendOTP: (email: string, mode: 'register' | 'login') => Promise<any>;
-  verifyOTP: (email: string, otp: string, mode: 'register' | 'login', name?: string) => Promise<void>;
+  sendOTP: (email: string, mode: 'register' | 'login' | 'reset_password') => Promise<any>;
+  verifyOTP: (email: string, otp: string, mode: 'register' | 'login' | 'reset_password', name?: string) => Promise<void>;
   verifyRegistrationOTP: (email: string, otp: string) => Promise<void>;
+  resetPassword: (newPassword: string) => Promise<void>;
   resendOTP: (email: string) => Promise<any>;
   clearOTPState: () => void;
   clearRegistrationState: () => void;
@@ -64,7 +65,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           console.log('🔐 [login] Starting login for:', email);
           console.log('🔐 [login] Email type:', typeof email, 'Password type:', typeof password);
-          
+
           // Validate input
           if (!email || !password) {
             throw new Error(`Missing credentials: email=${!!email}, password=${!!password}`);
@@ -72,7 +73,7 @@ export const useAuthStore = create<AuthState>()(
 
           console.log('📡 [login] Sending login request to backend...');
           const response = await apiClient.login(email, password);
-          
+
           console.log('📦 [login] Response received from backend:', {
             success: response.success,
             hasData: !!response.data,
@@ -80,7 +81,7 @@ export const useAuthStore = create<AuthState>()(
             hasToken: !!response.data?.accessToken,
             responseKeys: Object.keys(response),
           });
-          
+
           if (!response.success) {
             const errorMsg = response.message || 'Login failed';
             console.error('❌ [login] Response success is false:', errorMsg);
@@ -138,7 +139,7 @@ export const useAuthStore = create<AuthState>()(
           // Persist token to localStorage BEFORE updating state
           console.log('💾 [login] Saving token to localStorage...');
           localStorage.setItem('accessToken', token);
-          
+
           const saved = localStorage.getItem('accessToken');
           if (saved !== token) {
             console.error('❌ [login] Token not saved correctly to localStorage!');
@@ -169,12 +170,12 @@ export const useAuthStore = create<AuthState>()(
           console.error('❌ [login] ERROR DURING LOGIN:', errorMessage);
           console.error('❌ [login] Error object:', error);
           console.error('❌ [login] Error stack:', error instanceof Error ? error.stack : 'no stack');
-          
+
           // Clear any partial state
           console.log('🧹 [login] Clearing auth state...');
           localStorage.removeItem('accessToken');
-          set({ 
-            isLoading: false, 
+          set({
+            isLoading: false,
             isAuthenticated: false,
             user: null,
             accessToken: null,
@@ -185,7 +186,7 @@ export const useAuthStore = create<AuthState>()(
             otpName: null,
           });
           console.log('🧹 [login] Auth state cleared');
-          
+
           throw error;
         }
       },
@@ -219,7 +220,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      sendOTP: async (email: string, mode: 'register' | 'login') => {
+      sendOTP: async (email: string, mode: 'register' | 'login' | 'reset_password') => {
         set({ isLoading: true });
         try {
           console.log('📡 [sendOTP] Sending OTP for mode:', mode, 'email:', email);
@@ -242,7 +243,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      verifyOTP: async (email: string, otp: string, mode: 'register' | 'login', name?: string) => {
+      verifyOTP: async (email: string, otp: string, mode: 'register' | 'login' | 'reset_password', name?: string) => {
         set({ isLoading: true });
         try {
           const response = await apiClient.verifyOTP(email, otp, name);
@@ -253,7 +254,7 @@ export const useAuthStore = create<AuthState>()(
               name: response.data.user?.name || name || '',
               createdAt: response.data.user?.createdAt,
             };
-            if (mode === 'login') {
+            if (mode === 'login' || mode === 'reset_password') {
               set({
                 user,
                 accessToken: response.data.accessToken,
@@ -294,7 +295,7 @@ export const useAuthStore = create<AuthState>()(
 
           // Call verify OTP - backend will create user
           const response = await apiClient.verifyOTP(email, otp, name);
-          
+
           if (response.success) {
             // Clear temporary registration state
             set({
@@ -328,12 +329,26 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      resetPassword: async (newPassword: string) => {
+        set({ isLoading: true });
+        try {
+          const response = await apiClient.resetPassword(newPassword);
+          if (response.success) {
+            console.log('✅ Password reset successfully');
+          }
+          set({ isLoading: false });
+        } catch (error) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
       sendRegistrationOTP: async (name: string, email: string, password: string) => {
         set({ isLoading: true });
         try {
           // Send OTP via email first
           await apiClient.sendOTP(email, name);
-          
+
           // Set all state atomically AFTER OTP is sent
           // Set BOTH registration state AND login OTP state so route guard passes
           set({
@@ -400,10 +415,10 @@ export const useAuthStore = create<AuthState>()(
             registerPassword: null,
             registerOtpSent: false,
           });
-          
+
           // 🔴 CRITICAL: Also clear all project/conversation data on logout
           resetProjectsData('user_logout');
-          
+
           console.log('✅ User logged out successfully - all data cleared');
         }
       },
@@ -430,7 +445,7 @@ export const useAuthStore = create<AuthState>()(
 
           console.log('🔄 [refreshAccessToken] Attempting to refresh token...');
           const response = await apiClient.refresh();
-          
+
           if (response.success && response.data) {
             console.log('✅ [refreshAccessToken] Token refreshed successfully');
             set({
@@ -462,7 +477,7 @@ export const useAuthStore = create<AuthState>()(
       initializeAuth: async () => {
         initializeAuthCallCount++;
         console.log(`🔐 [initializeAuth] CALL #${initializeAuthCallCount}`);
-        
+
         if (initializeAuthCallCount > INIT_CALL_LIMIT) {
           console.error(`❌ [initializeAuth] INFINITE LOOP DETECTED! Called ${initializeAuthCallCount} times`);
           throw new Error('Auth initialization infinite loop detected');
@@ -472,12 +487,12 @@ export const useAuthStore = create<AuthState>()(
         try {
           // CRITICAL: Check for persisted token
           const storedToken = localStorage.getItem('accessToken');
-          
+
           console.log(`🔐 [initializeAuth] Call #${initializeAuthCallCount}: Stored token exists?`, !!storedToken);
-          
+
           if (!storedToken) {
             console.log('🔓 [initializeAuth] No stored token found. User is unauthenticated.');
-            set({ 
+            set({
               isLoading: false,
               isAuthenticated: false,
               user: null,
@@ -487,21 +502,21 @@ export const useAuthStore = create<AuthState>()(
           }
 
           console.log('🔐 [initializeAuth] Token found. Validating with backend...');
-          
+
           try {
             // Validate token by fetching user profile with timeout
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-            
+
             console.log(`🔐 [initializeAuth] Call #${initializeAuthCallCount}: Making getProfile request...`);
             const response = await apiClient.getProfile();
             clearTimeout(timeoutId);
-            
+
             console.log(`🔐 [initializeAuth] Call #${initializeAuthCallCount}: getProfile response:`, {
               success: response.success,
               hasData: !!response.data,
             });
-            
+
             if (response.success && response.data) {
               console.log('✅ [initializeAuth] Token validated. User authenticated:', response.data.email);
               set({

@@ -2,7 +2,7 @@
 import { Router } from "express";
 
 // Import the user controller functions
-import { updateUserAvatar, getUserProfile, updateUserProfile, setUserPassword, updateUserPassword } from "../controllers/user.controller.js";
+import { updateUserAvatar, getUserProfile, updateUserProfile, setUserPassword, updateUserPassword, resetPassword } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middle.js";
 
@@ -31,6 +31,9 @@ router.route("/password").patch(verifyJWT, updateUserPassword);
 
 // POST /avatar - Upload user avatar
 router.route("/avatar").post(verifyJWT, upload.single("avatar"), updateUserAvatar);
+
+// POST /reset-password - Reset password (forgot password flow)
+router.route("/reset-password").post(verifyJWT, resetPassword);
 
 // Export the router as default so it can be imported in app.js
 export default router;

@@ -35,5 +35,5 @@ if (process.env.NODE_ENV !== 'production') {
 // Default sender information
 export const sender = {
   email: process.env.EMAIL_USER,
-  name: "TMS",
+  name: "AI Companion Studio",
 };

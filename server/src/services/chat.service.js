@@ -8,6 +8,7 @@ import { getCached, setCached, invalidateUserConversationsCache } from '../utils
  * Get or create system prompt for project
  */
 export const getActiveSystemPrompt = async (projectId) => {
+  // 1. Try to find an active Prompt record (versioned prompts)
   const prompt = await prisma.prompt.findFirst({
     where: {
       projectId,
@@ -16,7 +17,17 @@ export const getActiveSystemPrompt = async (projectId) => {
     orderBy: { createdAt: 'desc' },
   });
 
-  return prompt?.content || 'You are a helpful AI assistant.';
+  if (prompt?.content) {
+    return prompt.content;
+  }
+
+  // 2. Fallback to Project's default systemPrompt
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { systemPrompt: true },
+  });
+
+  return project?.systemPrompt || 'You are a helpful AI assistant.';
 };
 
 /**
@@ -47,11 +58,11 @@ export const createConversation = async (projectId, userId, title = 'New Convers
   const project = await prisma.project.findUnique({
     where: { id: projectId },
   });
-  
+
   if (!project) {
     throw new NotFoundError('Project', projectId);
   }
-  
+
   if (project.userId !== userId) {
     throw new ForbiddenError('User does not own this project');
   }
@@ -148,15 +159,15 @@ export const getProjectConversations = async (
       include: {
         messages: includeMessages
           ? {
-              take: 1,
-              orderBy: { createdAt: 'desc' },
-              select: {
-                id: true,
-                role: true,
-                content: true,
-                createdAt: true,
-              },
-            }
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              role: true,
+              content: true,
+              createdAt: true,
+            },
+          }
           : false,
         _count: { select: { messages: true } },
       },
@@ -180,10 +191,10 @@ export const getProjectConversations = async (
       lastMessage:
         includeMessages && conv.messages.length > 0
           ? {
-              role: conv.messages[0].role,
-              content: conv.messages[0].content.substring(0, 100),
-              createdAt: conv.messages[0].createdAt,
-            }
+            role: conv.messages[0].role,
+            content: conv.messages[0].content.substring(0, 100),
+            createdAt: conv.messages[0].createdAt,
+          }
           : null,
       createdAt: conv.createdAt,
       updatedAt: conv.updatedAt,
@@ -381,7 +392,7 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
 
     let assistantContent;
     let aiError = null;
-    
+
     // Try OpenRouter first (production-ready)
     try {
       const { callOpenRouterWithContext } = await import('./openrouter.service.js');
@@ -409,7 +420,7 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
       console.log('   Full error:', JSON.stringify(openrouterError, null, 2));
       console.log('⚠️  [sendChatMessage] OpenRouter failed, trying Local LLM for development...');
       aiError = openrouterError;
-      
+
       // Fall back to Local LLM for development
       try {
         const { callLocalLLM } = await import('./local-llm.service.js');
@@ -437,13 +448,13 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
     console.log('📝 [sendChatMessage] Assistant response type:', typeof assistantContent);
     console.log('📝 [sendChatMessage] Assistant response length:', assistantContent?.length);
     console.log('📝 [sendChatMessage] Assistant response:', assistantContent?.substring(0, 100) + '...');
-    
+
     if (!assistantContent || assistantContent.trim().length === 0) {
       console.error('❌ [sendChatMessage] AI returned empty response!');
       aiError = aiError || new Error('AI API returned empty response');
       assistantContent = "I encountered an issue processing your message. Your message has been saved. Please try again shortly.";
     }
-  
+
 
     // Save assistant message
     console.log('💾 [sendChatMessage] About to save assistant message with content:', {
@@ -451,7 +462,7 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
       preview: assistantContent?.substring(0, 100),
       isEmpty: !assistantContent || assistantContent.trim().length === 0,
     });
-    
+
     const savedAssistantMessage = await saveMessage(
       conversationId,
       'assistant',
@@ -470,8 +481,10 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
     console.log('✅ [sendChatMessage] Message processed successfully');
 
     // Auto-generate title if first exchange
-    if (savedUserMessage.id && !conversation.title.startsWith('Conversation')) {
-      // Title already set, skip auto-generation
+    const isDefaultTitle = conversation.title === 'New Conversation' || conversation.title.startsWith('Conversation');
+
+    if (savedUserMessage.id && !isDefaultTitle) {
+      // Title already set to something custom, skip auto-generation
     } else if (savedUserMessage.id) {
       // Only attempt auto-title on first message
       const messageCount = await prisma.message.count({
