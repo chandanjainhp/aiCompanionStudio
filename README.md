@@ -8,7 +8,7 @@
 
 > 🌟 **Star us on GitHub:** [https://github.com/chandanjainhp/aiCompanionStudio](https://github.com/chandanjainhp/aiCompanionStudio)
 
-**Live Demo**: Coming soon  
+**Live Demo**: [https://aicompanionstudio.chandanjainhp.in](https://aicompanionstudio.chandanjainhp.in)  
 **Documentation**: See [ARCHITECTURE.md](./ARCHITECTURE.md) for system design  
 **Status**: ✅ Production Ready
 
