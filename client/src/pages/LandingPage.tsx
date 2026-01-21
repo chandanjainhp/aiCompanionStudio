@@ -162,6 +162,7 @@ export default function LandingPage() {
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-8"
                     >
                         <AutoAwesomeIcon sx={{ fontSize: 16 }} className="text-blue-400" />
+                        <span className="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-[10px] font-bold text-blue-300 uppercase tracking-wide mr-2">New</span>
                         <span className="text-sm font-medium text-white/80">Powered by Advanced AI OpenRoute API</span>
                     </motion.div>
 
