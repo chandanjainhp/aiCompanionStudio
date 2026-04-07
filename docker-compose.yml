@@ -1,0 +1,78 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai-companion-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-ai_companion_studio}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # pgAdmin Web Interface
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ai-companion-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '8080:80'
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  # Backend Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: ai-companion-server
+    env_file:
+      - ./server/.env
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-ai_companion_studio}?schema=public
+      - NODE_ENV=production
+      - CORS_ORIGIN=https://aicompanionstudio.chandanjainhp.in
+      - APP_URL=https://aicompanionstudio.chandanjainhp.in
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://aicompanionstudio.chandanjainhp.in/api/v1
+    container_name: ai-companion-client
+    ports:
+      - '3001:80'
+    depends_on:
+      - server
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+
+networks:
+  app-network:
+    driver: bridge

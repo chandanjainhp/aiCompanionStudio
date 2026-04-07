@@ -1,0 +1,62 @@
+{
+  "name": "howtosetupproductioninbackend",
+  "version": "1.0.0",
+  "description": "Production-ready REST API backend for multi-tenant chatbot platform",
+  "keywords": [
+    "chatbot",
+    "ai",
+    "api",
+    "openai",
+    "rest"
+  ],
+  "license": "MIT",
+  "author": "chandanjainhp",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "postinstall": "prisma generate",
+    "dev": "nodemon -r dotenv/config src/index.js",
+    "start": "node src/index.js",
+    "build": "echo 'No build needed for Node.js server'",
+    "test": "echo 'Run tests with your test framework'",
+    "lint": "eslint src",
+    "format": "prettier --write src",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js",
+    "deploy": "node -e \"console.log('Use deploy-server.sh or deploy.sh for deployment')\"",
+    "deploy:render": "echo 'Push to GitHub, then deploy via Render dashboard'",
+    "deploy:railway": "echo 'Push to GitHub, then deploy via Railway dashboard'",
+    "deploy:fly": "echo 'Requires flyctl CLI - see deploy-server.sh'"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.3.1",
+    "@prisma/client": "5.22.0",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.9.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.5.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
+    "node-cache": "^5.1.2",
+    "nodemailer": "^6.10.1",
+    "openai": "^6.16.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "nodemon": "^3.1.11",
+    "prettier": "^3.8.1",
+    "prisma": "5.22.0"
+  }
+}
