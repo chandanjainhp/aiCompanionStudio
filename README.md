@@ -11,7 +11,7 @@
 
 **An open-source, full-stack platform for building and interacting with custom AI agents — powered by [OpenRouter](https://openrouter.ai).**
 
-[Live Demo](https://aicompanionstudio.chandanjainhp.in) • [Architecture Docs](./ARCHITECTURE.md) • [Report a Bug](https://github.com/chandanjainhp/aiCompanionStudio/issues)
+ • [Architecture Docs](./ARCHITECTURE.md) • [Report a Bug](https://github.com/chandanjainhp/aiCompanionStudio/issues)
 
 </div>
 
@@ -290,6 +290,38 @@ npm run preview                # Preview production build
 npm run test                   # Run tests (Vitest)
 npm run lint                   # ESLint
 ```
+
+---
+
+## 🧪 Testing
+
+### Project Settings Tests
+
+The backend includes comprehensive tests for **per-project AI configuration** to ensure each project maintains its own independent model, temperature, max tokens, and system prompt settings.
+
+**Run Tests:**
+```bash
+cd server
+npm install
+npm run db:migrate
+npm test
+```
+
+**Test Coverage:**
+- ✅ Project creation with custom/default settings
+- ✅ Project retrieval and independence verification
+- ✅ Project settings updates (full and partial)
+- ✅ System prompt and core memory handling
+- ✅ Multi-user isolation and data security
+- ✅ Temperature and token boundary validation
+- ✅ AI API integration readiness
+
+**Expected Result:** All 17 tests pass ✅
+
+**Documentation:**
+- [TEST_GUIDE.md](./server/TEST_GUIDE.md) — Detailed test documentation
+- [QUICK_START.md](./server/QUICK_START.md) — Quick reference guide
+- [VERIFICATION_SUMMARY.md](./server/VERIFICATION_SUMMARY.md) — Complete verification summary
 
 ---
 

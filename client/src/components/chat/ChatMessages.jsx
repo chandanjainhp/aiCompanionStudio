@@ -34,8 +34,8 @@ export function ChatMessages({
     }
   }, [messages, streamingContent]);
   return <TooltipProvider>
-      <ScrollArea ref={scrollRef} className="flex-1 w-full">
-        <div className="flex justify-center w-full">
+      <ScrollArea ref={scrollRef} className="flex-1 w-full h-full">
+        <div className="flex justify-center w-full h-full">
           <div className="flex flex-col w-full max-w-4xl pt-16 pb-32 space-y-8 px-4 sm:px-6 lg:px-8">
             <AnimatePresence mode="popLayout" initial={false}>
               {messages.map(message => <MessageBubble key={message.id} message={message} />)}
