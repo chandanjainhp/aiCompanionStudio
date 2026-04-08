@@ -293,6 +293,38 @@ npm run lint                   # ESLint
 
 ---
 
+## 🧪 Testing
+
+### Project Settings Tests
+
+The backend includes comprehensive tests for **per-project AI configuration** to ensure each project maintains its own independent model, temperature, max tokens, and system prompt settings.
+
+**Run Tests:**
+```bash
+cd server
+npm install
+npm run db:migrate
+npm test
+```
+
+**Test Coverage:**
+- ✅ Project creation with custom/default settings
+- ✅ Project retrieval and independence verification
+- ✅ Project settings updates (full and partial)
+- ✅ System prompt and core memory handling
+- ✅ Multi-user isolation and data security
+- ✅ Temperature and token boundary validation
+- ✅ AI API integration readiness
+
+**Expected Result:** All 17 tests pass ✅
+
+**Documentation:**
+- [TEST_GUIDE.md](./server/TEST_GUIDE.md) — Detailed test documentation
+- [QUICK_START.md](./server/QUICK_START.md) — Quick reference guide
+- [VERIFICATION_SUMMARY.md](./server/VERIFICATION_SUMMARY.md) — Complete verification summary
+
+---
+
 ## 🐛 Troubleshooting
 
 **Database connection refused (`ECONNREFUSED 127.0.0.1:5432`)**
