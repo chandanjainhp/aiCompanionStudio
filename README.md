@@ -11,7 +11,7 @@
 
 **An open-source, full-stack platform for building and interacting with custom AI agents — powered by [OpenRouter](https://openrouter.ai).**
 
-[Live Demo](https://aicompanionstudio.chandanjainhp.in) • [Architecture Docs](./ARCHITECTURE.md) • [Report a Bug](https://github.com/chandanjainhp/aiCompanionStudio/issues)
+ • [Architecture Docs](./ARCHITECTURE.md) • [Report a Bug](https://github.com/chandanjainhp/aiCompanionStudio/issues)
 
 </div>
 
