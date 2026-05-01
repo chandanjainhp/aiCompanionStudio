@@ -387,18 +387,34 @@ export const useAuthStore = create()(persist((set, get) => ({
     });
   },
   logout: async () => {
+    console.log('🚪 [authStore.logout] Logout initiated');
     set({
       isLoading: true
     });
+
+    let apiCallSucceeded = false;
+
     try {
-      await apiClient.logout();
+      console.log('🚪 [authStore.logout] Calling apiClient.logout()...');
+      const result = await apiClient.logout();
+      console.log('✅ [authStore.logout] API logout successful:', result);
+      apiCallSucceeded = true;
     } catch (error) {
-      console.warn('Logout API call failed:', error);
-      // Still complete logout even if API call fails
+      console.error('❌ [authStore.logout] API call failed:', {
+        message: error.message,
+        status: error.status,
+        endpoint: error.endpoint,
+        method: error.method,
+        type: error.constructor.name
+      });
+      // Still complete logout even if API call fails - critical for UX
+      console.warn('⚠️ [authStore.logout] Completing logout despite API error for UX safety');
     } finally {
-      // Clear ALL auth state immediately
+      // Clear ALL auth state regardless of API call result
+      console.log('🧹 [authStore.logout] Clearing local auth state and tokens');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+
       set({
         user: null,
         isAuthenticated: false,
@@ -415,9 +431,16 @@ export const useAuthStore = create()(persist((set, get) => ({
         registerOtpSent: false
       });
 
-      // 🔴 CRITICAL: Also clear all project/conversation data on logout
-      resetProjectsData('user_logout');
-      console.log('✅ User logged out successfully - all data cleared');
+      // Clear all project/conversation data on logout
+      try {
+        resetProjectsData('user_logout');
+        console.log('✅ [authStore.logout] Project data cleared');
+      } catch (resetError) {
+        console.warn('⚠️ [authStore.logout] Failed to reset project data:', resetError.message);
+      }
+
+      const status = apiCallSucceeded ? '✅ SUCCESS' : '⚠️ PARTIAL (API failed, local clear OK)';
+      console.log(`${status} [authStore.logout] User logged out - all data cleared`);
     }
   },
   setUser: user => {

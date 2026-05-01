@@ -1,44 +1,63 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import SearchIcon from '@mui/icons-material/Search';
-import GridViewIcon from '@mui/icons-material/GridView';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import AddIcon from '@mui/icons-material/Add';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import BoltIcon from '@mui/icons-material/Bolt';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Search, LayoutGrid, List, Plus, AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProjectCard, CreateProjectModal } from '@/components/projects';
 import { useProjectsStore } from '@/store/projectsStore';
 import { useAuthStore } from '@/store/authStore';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import { cn } from '@/lib/utils';
+
+const DB = {
+  bg: '#0E0C0A',
+  surface: '#161210',
+  border: '#252018',
+  borderBright: '#352C1C',
+  accent: '#E8961E',
+  accentDark: '#9A5E0A',
+  text: '#F0E8D8',
+  muted: '#7A6A54',
+  green: '#4ADE80',
+  red: '#FF5C5C',
+};
+
+function LiveClock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return <>{time.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</>;
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export default function Dashboard() {
-  const {
-    projects,
-    fetchProjects,
-    isLoading
-  } = useProjectsStore();
-  const {
-    user
-  } = useAuthStore();
-  const {
-    error,
-    handleError,
-    clearError
-  } = useErrorHandler();
+  const { projects, fetchProjects, isLoading } = useProjectsStore();
+  const { user } = useAuthStore();
+  const { error, handleError, clearError } = useErrorHandler();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recent');
   const [viewMode, setViewMode] = useState('grid');
   const [refreshKey, setRefreshKey] = useState(0);
+
   useEffect(() => {
-    const loadProjects = async () => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300;1,9..144,400&family=JetBrains+Mono:wght@400;500;600&display=swap';
+    document.head.appendChild(link);
+    return () => { if (document.head.contains(link)) document.head.removeChild(link); };
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
       try {
-        console.log('📦 [Dashboard] Fetching projects (refreshKey:', refreshKey, ')...');
+        console.log('🔄 [Dashboard] Fetching projects (refreshKey:', refreshKey, ')...');
         await fetchProjects();
         console.log('✅ [Dashboard] Projects fetched successfully');
       } catch (err) {
@@ -46,292 +65,322 @@ export default function Dashboard() {
         handleError(err, 'Failed to load projects');
       }
     };
-    loadProjects();
+    load();
   }, [refreshKey, fetchProjects, handleError]);
+
   const handleProjectCreated = () => {
-    console.log('🔄 [Dashboard] Project created, refreshing list...');
+    console.log('✅ [Dashboard] Project created, refreshing list...');
     setRefreshKey(prev => prev + 1);
   };
-  const filteredProjects = projects.filter(project => project.name.toLowerCase().includes(searchQuery.toLowerCase()) || project.description?.toLowerCase().includes(searchQuery.toLowerCase())).sort((a, b) => {
-    switch (sortBy) {
-      case 'name':
-        return a.name.localeCompare(b.name);
-      case 'created':
-        return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-      case 'recent':
-      default:
-        return (b.updatedAt ? new Date(b.updatedAt).getTime() : 0) - (a.updatedAt ? new Date(a.updatedAt).getTime() : 0);
-    }
-  });
 
-  // Calculate stats
+  const filteredProjects = projects
+    .filter(p =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name': return a.name.localeCompare(b.name);
+        case 'created':
+          return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        default:
+          return (b.updatedAt ? new Date(b.updatedAt).getTime() : 0) - (a.updatedAt ? new Date(a.updatedAt).getTime() : 0);
+      }
+    });
+
   const totalConversations = projects.reduce((sum, p) => sum + (p.conversationCount || 0), 0);
   const activeProjects = projects.length;
+  const quotaRemaining = user?.chatLimit ? user.chatLimit - (user.chatUsageCount || 0) : '∞';
+  const quotaLow = user?.chatLimit && Number(quotaRemaining) < 10;
 
-  // Get greeting based on time
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
+  const stats = [
+    { label: 'ACTIVE PROJECTS', value: activeProjects, status: 'OPERATIONAL', dot: DB.green },
+    { label: 'CONVERSATIONS', value: totalConversations, status: 'LOGGED', dot: DB.green },
+    { label: 'QUOTA REMAINING', value: quotaRemaining, status: quotaLow ? 'WARNING' : 'NOMINAL', dot: quotaLow ? DB.red : DB.green },
+  ];
 
-  // Show error state
   if (error && projects.length === 0) {
-    return <div className="min-h-screen flex items-center justify-center bg-[#0B0F1A]">
-        <motion.div initial={{
-        opacity: 0,
-        y: 20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} className="max-w-md text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20">
-            <ErrorOutlineIcon sx={{
-            fontSize: 32
-          }} className="text-red-400" />
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: DB.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <style>{`.db-mono{font-family:'JetBrains Mono',monospace}`}</style>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', padding: 40 }}>
+          <div style={{ width: 56, height: 56, border: `2px solid ${DB.red}`, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <AlertCircle size={22} color={DB.red} />
           </div>
-          <h2 className="text-xl font-bold text-white">Failed to load projects</h2>
-          <p className="text-sm text-muted-foreground">{error.message}</p>
-          <Button onClick={() => {
-          clearError();
-          setRefreshKey(prev => prev + 1);
-        }} className="bg-gradient-to-r from-blue-600 to-cyan-500">
-            Try Again
-          </Button>
+          <p className="db-mono" style={{ fontSize: 10, color: DB.red, letterSpacing: '0.25em', marginBottom: 8 }}>SYSTEM ERROR</p>
+          <p className="db-mono" style={{ fontSize: 12, color: DB.muted, marginBottom: 28 }}>{error.message}</p>
+          <button
+            onClick={() => { clearError(); setRefreshKey(p => p + 1); }}
+            className="db-mono"
+            style={{ border: `1px solid ${DB.accent}`, color: DB.accent, backgroundColor: 'transparent', padding: '10px 28px', fontSize: 10, letterSpacing: '0.2em', cursor: 'pointer' }}
+          >
+            RETRY ↺
+          </button>
         </motion.div>
-      </div>;
+      </div>
+    );
   }
 
-  // Show loading state
   if (isLoading && projects.length === 0) {
-    return <div className="min-h-screen flex items-center justify-center bg-[#0B0F1A]">
-        <motion.div initial={{
-        opacity: 0
-      }} animate={{
-        opacity: 1
-      }} className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center">
-            <motion.div animate={{
-            rotate: 360
-          }} transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "linear"
-          }} className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center">
-              <img src="/logo.png" alt="Loading" className="w-full h-full object-contain" />
-            </motion.div>
-          </div>
-          <p className="text-muted-foreground">Loading your workspace...</p>
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: DB.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <style>{`.db-mono{font-family:'JetBrains Mono',monospace}`}</style>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center' }}>
+          <motion.div
+            animate={{ opacity: [1, 0.25, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: DB.accent, margin: '0 auto 20px' }}
+          />
+          <p className="db-mono" style={{ fontSize: 10, color: DB.muted, letterSpacing: '0.25em' }}>LOADING WORKSPACE...</p>
         </motion.div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="dark min-h-screen bg-[#0B0F1A]">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden border-b border-white/10">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-cyan-500/10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent" />
 
-        <div className="relative container py-12">
-          {/* Greeting */}
-          <motion.div initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          duration: 0.5
-        }}>
-            <h1 className="text-4xl font-bold text-white mb-2">
-              {getGreeting()}, {user?.name?.split(' ')[0] || 'there'}
-            </h1>
-            <p className="text-muted-foreground/70 text-lg">
-              Welcome to your AI workspace
-            </p>
-          </motion.div>
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: DB.bg, color: DB.text }}>
+      <style>{`
+        .db-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+        .db-serif { font-family: 'Fraunces', Georgia, serif; }
+        .db-pulse { animation: dbpulse 2.2s ease-in-out infinite; }
+        @keyframes dbpulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+        .db-search { background:${DB.surface}; border:1px solid ${DB.border}; color:${DB.text}; outline:none; width:100%; padding:8px 12px 8px 32px; font-size:11px; letter-spacing:0.05em; }
+        .db-search::placeholder { color:${DB.muted}; }
+        .db-search:focus { border-color:${DB.accent}; }
+        .db-view-btn { background:transparent; border:none; cursor:pointer; width:34px; height:34px; display:flex; align-items:center; justify-content:center; transition:color 0.12s,background 0.12s; }
+        .db-view-btn:hover { color:${DB.text} !important; }
+        .db-new-btn:hover { background-color:#C87A12 !important; }
+        .db-stat:not(:last-child) { border-right:1px solid ${DB.border}; }
+        .db-sort [data-radix-select-trigger] { border-radius:0 !important; }
+      `}</style>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-            <motion.div initial={{
-            opacity: 0,
-            y: 20
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            duration: 0.5,
-            delay: 0.1
-          }} className="relative group">
-              <div className="absolute -inset-[1px] bg-gradient-to-br from-blue-500/20 via-cyan-500/20 to-blue-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-sm" />
-              <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
-                    <AutoAwesomeIcon sx={{
-                    fontSize: 20
-                  }} className="text-white" />
-                  </div>
-                  <TrendingUpIcon sx={{
-                  fontSize: 16
-                }} className="text-green-400" />
-                </div>
-                <p className="text-3xl font-bold text-white mb-1">{activeProjects}</p>
-                <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-medium">Active Projects</p>
+      {/* Grain overlay */}
+      <div style={{
+        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.028,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")`,
+        backgroundSize: '220px 220px',
+      }} />
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+        {/* SYSTEM BAR */}
+        <div style={{ borderBottom: `1px solid ${DB.border}`, backgroundColor: DB.surface, padding: '7px 24px sm:32px' }}>
+          <div className="max-w-screen-2xl mx-auto flex items-center justify-between px-4 sm:px-8">
+            <div className="db-mono flex items-center gap-4 sm:gap-6" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.2em' }}>
+              <span className="hidden sm:inline">ACS WORKSPACE v1.0</span>
+              <span className="hidden sm:inline" style={{ color: DB.border }}>·</span>
+              <span><LiveClock /></span>
+              <span style={{ color: DB.border }}>·</span>
+              <span className="flex items-center gap-1.5">
+                <span className="db-pulse inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: DB.green }} />
+                OPERATIONAL
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="db-mono hidden sm:block" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.12em' }}>
+                {user?.email}
+              </span>
+              <div
+                className="db-mono"
+                style={{
+                  width: 28, height: 28, borderRadius: '50%', backgroundColor: DB.accentDark,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 11, color: DB.accent, fontWeight: 600, border: `1px solid ${DB.accent}40`,
+                }}
+              >
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
-            </motion.div>
-
-            <motion.div initial={{
-            opacity: 0,
-            y: 20
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            duration: 0.5,
-            delay: 0.2
-          }} className="relative group">
-              <div className="absolute -inset-[1px] bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-purple-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-sm" />
-              <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-                    <ChatBubbleOutlineIcon sx={{
-                    fontSize: 20
-                  }} className="text-white" />
-                  </div>
-                  <TrendingUpIcon sx={{
-                  fontSize: 16
-                }} className="text-green-400" />
-                </div>
-                <p className="text-3xl font-bold text-white mb-1">{totalConversations}</p>
-                <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-medium">Total Chats</p>
-              </div>
-            </motion.div>
-
-            <motion.div initial={{
-            opacity: 0,
-            y: 20
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            duration: 0.5,
-            delay: 0.3
-          }} className="relative group">
-              <div className="absolute -inset-[1px] bg-gradient-to-br from-orange-500/20 via-yellow-500/20 to-orange-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-sm" />
-              <div className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-600 to-yellow-500 flex items-center justify-center">
-                    <BoltIcon sx={{
-                    fontSize: 20
-                  }} className="text-white" />
-                  </div>
-                  <TrendingUpIcon sx={{
-                  fontSize: 16
-                }} className="text-green-400" />
-                </div>
-                <p className="text-3xl font-bold text-white mb-1">
-                  {user?.chatLimit ? user.chatLimit - (user.chatUsageCount || 0) : '∞'}
-                </p>
-                <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-medium">
-                  Remaining Calls
-                </p>
-              </div>
-            </motion.div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="container py-4 md:py-8">
-        {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6 md:mb-8">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md w-full">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center">
-              <SearchIcon sx={{
-              fontSize: 20
-            }} className="text-gray-400" />
-            </div>
-            <Input placeholder="Search projects..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-11 bg-white/5 border-white/10 focus:border-blue-500/50 focus:bg-white/[0.07] transition-all h-11 rounded-xl text-base" />
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-8">
+
+          {/* HEADER */}
+          <div style={{ borderBottom: `1px solid ${DB.border}`, padding: '36px 0 32px' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p className="db-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.3em', marginBottom: 10 }}>
+                WORKSPACE · USER SESSION
+              </p>
+              <h1
+                className="db-serif"
+                style={{ fontSize: 'clamp(34px, 5vw, 58px)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.05, color: DB.text }}
+              >
+                {getGreeting()},&nbsp;
+                <span style={{ color: DB.accent }}>{user?.name?.split(' ')[0] || 'there'}.</span>
+              </h1>
+            </motion.div>
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
-            <Select value={sortBy} onValueChange={v => setSortBy(v)}>
-              <SelectTrigger className="w-full sm:w-[140px] bg-white/5 border-white/10 rounded-xl h-11 backdrop-blur-sm flex-1 sm:flex-none">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#0B0F1A]/95 backdrop-blur-xl border-white/10">
-                <SelectItem value="recent">Recent</SelectItem>
-                <SelectItem value="name">Name</SelectItem>
-                <SelectItem value="created">Created</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* STATS */}
+          <div style={{ borderBottom: `1px solid ${DB.border}`, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {stats.map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.12 + i * 0.08 }}
+                className="db-stat"
+                style={{ padding: 'clamp(18px, 3vw, 28px) 0 clamp(18px, 3vw, 28px) 0' }}
+              >
+                <p className="db-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.22em', marginBottom: 10 }}>
+                  {s.label}
+                </p>
+                <div
+                  className="db-mono"
+                  style={{ fontSize: 'clamp(36px, 5vw, 58px)', color: DB.accent, lineHeight: 1, fontWeight: 500, marginBottom: 10 }}
+                >
+                  {s.value}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="db-pulse inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.dot }} />
+                  <span className="db-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.2em' }}>{s.status}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
 
-            <div className="flex border border-white/10 rounded-xl overflow-hidden bg-white/5 backdrop-blur-sm shrink-0">
-              <Button variant="ghost" size="icon" className={cn('rounded-none h-11 w-11 hover:bg-white/10', viewMode === 'grid' && 'bg-white/10')} onClick={() => setViewMode('grid')}>
-                <GridViewIcon sx={{
-                fontSize: 16
-              }} />
-              </Button>
-              <Button variant="ghost" size="icon" className={cn('rounded-none h-11 w-11 hover:bg-white/10', viewMode === 'list' && 'bg-white/10')} onClick={() => setViewMode('list')}>
-                <ViewListIcon sx={{
-                fontSize: 16
-              }} />
-              </Button>
+          {/* TOOLBAR */}
+          <div
+            style={{ borderBottom: `1px solid ${DB.border}`, padding: '14px 0', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}
+          >
+            {/* Search */}
+            <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
+              <Search size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: DB.muted, pointerEvents: 'none' }} />
+              <input
+                className="db-mono db-search"
+                placeholder="search projects..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
             </div>
 
+            {/* Sort */}
+            <div className="db-sort">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger
+                  className="db-mono rounded-none h-[34px] w-[130px] text-[10px] tracking-widest"
+                  style={{ backgroundColor: DB.surface, borderColor: DB.border, color: DB.muted, borderRadius: 0, fontFamily: "'JetBrains Mono', monospace" }}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent
+                  style={{ backgroundColor: DB.surface, borderColor: DB.border, borderRadius: 0 }}
+                >
+                  <SelectItem value="recent" className="db-mono" style={{ fontSize: 10, color: DB.text }}>RECENT</SelectItem>
+                  <SelectItem value="name" className="db-mono" style={{ fontSize: 10, color: DB.text }}>NAME A–Z</SelectItem>
+                  <SelectItem value="created" className="db-mono" style={{ fontSize: 10, color: DB.text }}>CREATED</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* View toggle */}
+            <div style={{ display: 'flex', border: `1px solid ${DB.border}` }}>
+              {[{ mode: 'grid', Icon: LayoutGrid }, { mode: 'list', Icon: List }].map(({ mode, Icon }) => (
+                <button
+                  key={mode}
+                  className="db-view-btn"
+                  onClick={() => setViewMode(mode)}
+                  style={{
+                    color: viewMode === mode ? DB.accent : DB.muted,
+                    backgroundColor: viewMode === mode ? DB.borderBright : 'transparent',
+                    borderRight: mode === 'grid' ? `1px solid ${DB.border}` : 'none',
+                  }}
+                >
+                  <Icon size={13} />
+                </button>
+              ))}
+            </div>
+
+            {/* New project */}
             <CreateProjectModal onSuccess={handleProjectCreated}>
-              <Button className="flex-1 sm:flex-none gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-blue-500/25 h-11 px-4 sm:px-6 rounded-xl font-semibold whitespace-nowrap">
-                <AddIcon sx={{
-                fontSize: 16
-              }} />
-                <span className="hidden sm:inline">New Project</span>
-                <span className="sm:hidden">New</span>
-              </Button>
+              <button
+                className="db-mono db-new-btn flex items-center gap-1.5"
+                style={{
+                  backgroundColor: DB.accent, color: '#0E0C0A', border: 'none',
+                  padding: '0 16px', height: 34, fontSize: 10, letterSpacing: '0.18em',
+                  fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.15s',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Plus size={11} />
+                <span className="hidden sm:inline">NEW PROJECT</span>
+                <span className="sm:hidden">NEW</span>
+              </button>
             </CreateProjectModal>
           </div>
-        </div>
 
-        {/* Projects Grid/List */}
-        <AnimatePresence mode="wait">
-          {filteredProjects.length === 0 ? <motion.div key="empty" initial={{
-          opacity: 0,
-          y: 20
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} exit={{
-          opacity: 0,
-          y: -20
-        }} className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-24 h-24 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6 p-4">
-                <img src="/logo.png" alt="No projects" className="w-full h-full object-contain opacity-50" />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">
-                {searchQuery ? 'No projects found' : 'Create your first project'}
-              </h2>
-              <p className="text-muted-foreground/70 mb-8 max-w-md">
-                {searchQuery ? 'Try adjusting your search terms' : 'Get started by creating an AI agent with custom prompts and settings'}
-              </p>
-              {!searchQuery && <CreateProjectModal onSuccess={handleProjectCreated}>
-                  <Button className="gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 shadow-lg shadow-blue-500/25 h-11 px-6 rounded-xl font-semibold">
-                    <AddIcon sx={{
-                fontSize: 16
-              }} />
-                    New Project
-                  </Button>
-                </CreateProjectModal>}
-            </motion.div> : <motion.div key="grid" initial={{
-          opacity: 0
-        }} animate={{
-          opacity: 1
-        }} exit={{
-          opacity: 0
-        }} className={cn('grid gap-6', viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1')}>
-              {filteredProjects.map((project, index) => <ProjectCard key={project.id} project={project} index={index} />)}
-            </motion.div>}
-        </AnimatePresence>
+          {/* PROJECT GRID */}
+          <div style={{ padding: '28px 0 48px' }}>
+            <AnimatePresence mode="wait">
+              {filteredProjects.length === 0 ? (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  style={{ padding: '72px 0', textAlign: 'center' }}
+                >
+                  <div
+                    style={{
+                      width: 60, height: 60, border: `1px solid ${DB.border}`,
+                      margin: '0 auto 22px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <img src="/logo.png" alt="" style={{ width: 34, height: 34, objectFit: 'contain', opacity: 0.35 }} />
+                  </div>
+                  <p className="db-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.25em', marginBottom: 10 }}>
+                    {searchQuery ? 'NO RESULTS FOUND' : 'NO PROJECTS YET'}
+                  </p>
+                  <p
+                    className="db-serif"
+                    style={{ fontSize: 22, fontStyle: 'italic', color: DB.text, marginBottom: 28, fontWeight: 300 }}
+                  >
+                    {searchQuery ? 'Adjust your search query.' : 'Create your first AI companion.'}
+                  </p>
+                  {!searchQuery && (
+                    <CreateProjectModal onSuccess={handleProjectCreated}>
+                      <button
+                        className="db-mono db-new-btn inline-flex items-center gap-2"
+                        style={{
+                          backgroundColor: DB.accent, color: '#0E0C0A', border: 'none',
+                          padding: '12px 28px', fontSize: 10, letterSpacing: '0.18em',
+                          fontWeight: 600, cursor: 'pointer',
+                        }}
+                      >
+                        <Plus size={12} />
+                        NEW PROJECT
+                      </button>
+                    </CreateProjectModal>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="projects"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className={cn(
+                    'grid gap-5',
+                    viewMode === 'grid'
+                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                      : 'grid-cols-1'
+                  )}
+                >
+                  {filteredProjects.map((project, index) => (
+                    <ProjectCard key={project.id} project={project} index={index} />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+        </div>
       </div>
-    </div>;
+    </div>
+  );
 }

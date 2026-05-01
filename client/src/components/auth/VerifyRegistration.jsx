@@ -1,157 +1,87 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader2, ArrowLeft, Mail } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Loader2, ArrowLeft, UserCheck, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+
+const DB = {
+  bg: '#0E0C0A',
+  surface: '#161210',
+  border: '#252018',
+  borderBright: '#352C1C',
+  accent: '#E8961E',
+  accentDark: '#9A5E0A',
+  text: '#F0E8D8',
+  muted: '#7A6A54',
+  green: '#4ADE80',
+  red: '#FF5C5C',
+  orange: '#F97316',
+};
+
 export function VerifyRegistration() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const {
-    toast
-  } = useToast();
-  const {
-    verifyRegistrationOTP,
-    resendOTP,
-    isLoading,
-    registerEmail,
-    registerName,
-    registerOtpSent,
-    clearRegistrationState,
-    _isHydrated
+    verifyRegistrationOTP, resendOTP, isLoading,
+    registerEmail, registerName, registerOtpSent,
+    clearRegistrationState, _isHydrated,
   } = useAuthStore();
-  const stateEmail = location.state?.email;
-  const stateName = location.state?.name;
-  const email = registerEmail || stateEmail;
-  const name = registerName || stateName;
 
-  // CRITICAL: All hooks must be called unconditionally, before any early returns
-  const [otp, setOtp] = useState('');
-  const [timer, setTimer] = useState(900); // 15 minutes
-  const [attempts, setAttempts] = useState(0);
+  const stateEmail = location.state?.email;
+  const stateName  = location.state?.name;
+  const email      = registerEmail || stateEmail;
+  const name       = registerName  || stateName;
+
+  const [otp, setOtp]                       = useState('');
+  const [timer, setTimer]                   = useState(900);
+  const [attempts, setAttempts]             = useState(0);
   const [resendCooldown, setResendCooldown] = useState(30);
 
-  // Debug logging
-  // Debug logging - only depends on raw state values
   useEffect(() => {
-    console.log('📋 [VerifyRegistration] State check:', {
-      _isHydrated,
-      registerEmail,
-      registerName,
-      registerOtpSent,
-      stateEmail,
-      stateName,
-      email,
-      name
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [_isHydrated, registerEmail, registerName, registerOtpSent, stateEmail, stateName]);
-  useEffect(() => {
-    // Don't check state until store is rehydrated
-    if (!_isHydrated) {
-      console.log('⏳ [VerifyRegistration] Waiting for store rehydration...');
-      return;
-    }
-
-    // Redirect if no registration OTP context
+    if (!_isHydrated) return;
     if (!email || !name || !registerOtpSent) {
-      console.log('⚠️ [VerifyRegistration] Redirecting to /register - missing state:', {
-        email,
-        name,
-        registerOtpSent
-      });
       navigate('/register');
-      return;
     }
-    console.log('✅ [VerifyRegistration] All state valid, showing OTP form');
   }, [_isHydrated, email, name, registerOtpSent, navigate]);
+
   useEffect(() => {
     if (timer <= 0) return;
     const t = setTimeout(() => setTimer(v => v - 1), 1000);
     return () => clearTimeout(t);
   }, [timer]);
+
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const t = setTimeout(() => setResendCooldown(v => v - 1), 1000);
     return () => clearTimeout(t);
   }, [resendCooldown]);
 
-  // Show loading state while rehydrating
-  if (!_isHydrated) {
-    return <div className="max-w-md mx-auto p-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>;
-  }
-
-  // Show fallback if any required state is missing
-  if (!email || !name || !registerOtpSent) {
-    return <div className="max-w-md mx-auto p-4">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">
-              ⚠️ Redirecting to registration...
-            </p>
-          </CardContent>
-        </Card>
-      </div>;
-  }
   const handleVerify = async e => {
     e.preventDefault();
     if (otp.length !== 6) {
-      toast({
-        title: 'Invalid OTP',
-        description: 'Enter a 6-digit code',
-        variant: 'destructive'
-      });
+      toast({ title: 'Invalid OTP', description: 'Enter a 6-digit code', variant: 'destructive' });
       return;
     }
     if (attempts >= 3) {
-      toast({
-        title: 'Too many attempts',
-        description: 'Please request a new OTP',
-        variant: 'destructive'
-      });
+      toast({ title: 'Too many attempts', description: 'Please request a new OTP', variant: 'destructive' });
       return;
     }
     try {
-      // Verify OTP - backend creates user and logs them in
       await verifyRegistrationOTP(email, otp);
-      toast({
-        title: 'Success',
-        description: 'Account created successfully. Welcome!'
-      });
-
-      // Clear registration state
+      toast({ title: 'Account created', description: 'Welcome!' });
       clearRegistrationState();
-
-      // Redirect to dashboard (user is already logged in)
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       const count = attempts + 1;
       setAttempts(count);
       setOtp('');
-      toast({
-        title: 'Incorrect OTP',
-        description: `Attempts ${count}/3`,
-        variant: 'destructive'
-      });
-      if (count >= 3) {
-        setTimer(0);
-      }
+      toast({ title: 'Incorrect OTP', description: `Attempt ${count} of 3`, variant: 'destructive' });
+      if (count >= 3) setTimer(0);
     }
   };
+
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     try {
@@ -160,72 +90,140 @@ export function VerifyRegistration() {
       setTimer(900);
       setAttempts(0);
       setResendCooldown(30);
-      toast({
-        title: 'OTP Sent',
-        description: 'Check your email for the new code'
-      });
+      toast({ title: 'OTP Sent', description: 'Check your email for the new code' });
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Could not resend OTP';
-      toast({
-        title: 'Failed',
-        description: errorMsg,
-        variant: 'destructive'
-      });
+      toast({ title: 'Failed', description: err instanceof Error ? err.message : 'Could not resend OTP', variant: 'destructive' });
     }
   };
-  return <motion.div initial={{
-    opacity: 0,
-    y: 15
-  }} animate={{
-    opacity: 1,
-    y: 0
-  }} transition={{
-    duration: 0.3
-  }} className="max-w-md mx-auto">
-      <Card>
-        <CardHeader className="text-center space-y-3">
-          <div className="mx-auto w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <Mail className="text-primary-foreground w-6 h-6" />
+
+  const mins       = Math.floor(timer / 60);
+  const secs       = String(timer % 60).padStart(2, '0');
+  const timerColor = timer > 180 ? DB.green : timer > 60 ? DB.orange : DB.red;
+
+  if (!_isHydrated) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: DB.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <motion.div animate={{ opacity: [1, 0.25, 1] }} transition={{ duration: 1.4, repeat: Infinity }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: DB.accent }} />
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!email || !name || !registerOtpSent) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: DB.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: DB.muted, letterSpacing: '0.15em' }}>
+          REDIRECTING...
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: DB.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <style>{`
+        .vr-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+        .vr-otp-input { background: ${DB.surface}; border: 1px solid ${DB.borderBright}; color: ${DB.accent}; outline: none; padding: 16px 12px; font-size: 28px; font-family: 'JetBrains Mono', monospace; width: 100%; text-align: center; letter-spacing: 0.35em; transition: border-color 0.15s; }
+        .vr-otp-input:focus { border-color: ${DB.accent}; box-shadow: 0 0 0 1px ${DB.accent}40; }
+        .vr-otp-input:disabled { opacity: 0.4; cursor: not-allowed; }
+        .vr-btn { background: ${DB.accent}; color: #0E0C0A; border: none; padding: 12px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; cursor: pointer; transition: background 0.15s; font-family: 'JetBrains Mono', monospace; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .vr-btn:hover:not(:disabled) { background: ${DB.accentDark}; }
+        .vr-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .vr-resend { background: transparent; border: 1px solid ${DB.border}; color: ${DB.muted}; padding: 9px 20px; font-size: 10px; letter-spacing: 0.12em; cursor: pointer; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .vr-resend:not(:disabled):hover { border-color: ${DB.accent}; color: ${DB.accent}; }
+        .vr-resend:disabled { opacity: 0.35; cursor: not-allowed; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        style={{ width: '100%', maxWidth: 400 }}
+      >
+        <div style={{ marginBottom: 36 }}>
+          <div className="vr-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.3em', marginBottom: 20 }}>
+            ACCOUNT VERIFICATION
           </div>
-          <CardTitle>Verify Your Email</CardTitle>
-          <CardDescription>
-            Code sent to <strong>{email}</strong>
-          </CardDescription>
-        </CardHeader>
+          <div style={{ width: 40, height: 40, background: DB.surface, border: `1px solid ${DB.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+            <UserCheck size={18} style={{ color: DB.accent }} />
+          </div>
+          <h1 style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 32, fontWeight: 300, fontStyle: 'italic', lineHeight: 1.1, color: DB.text, marginBottom: 10 }}>
+            Verify your <span style={{ color: DB.accent }}>email</span>
+          </h1>
+          <p className="vr-mono" style={{ fontSize: 11, color: DB.muted, lineHeight: 1.7 }}>
+            A 6-digit code was sent to{' '}
+            <span style={{ color: DB.text }}>{email}</span>
+          </p>
+        </div>
 
         <form onSubmit={handleVerify}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Enter 6-digit code</Label>
-              <Input value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" className="text-center text-lg tracking-widest font-mono" autoFocus disabled={timer === 0} />
+          <div style={{ background: DB.surface, border: `1px solid ${DB.border}`, padding: 28, marginBottom: 2 }}>
+            <div style={{ marginBottom: 20 }}>
+              <label className="vr-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 10 }}>
+                6-DIGIT CODE
+              </label>
+              <input
+                className="vr-otp-input"
+                value={otp}
+                onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                inputMode="numeric"
+                autoFocus
+                disabled={timer === 0 || attempts >= 3}
+                placeholder="——————"
+                maxLength={6}
+              />
             </div>
 
-            <div className={cn('text-center py-2 rounded font-mono text-sm font-semibold', timer > 60 ? 'bg-blue-100 text-blue-700' : timer > 0 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700')}>
-              {timer > 0 ? `${Math.floor(timer / 60)}:${String(timer % 60).padStart(2, '0')}` : 'OTP expired'}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, padding: '8px 0', borderTop: `1px solid ${DB.border}`, borderBottom: `1px solid ${DB.border}` }}>
+              <div>
+                <div className="vr-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.15em', marginBottom: 3 }}>EXPIRES IN</div>
+                <div className="vr-mono" style={{ fontSize: 18, fontWeight: 600, color: timerColor }}>
+                  {timer > 0 ? `${mins}:${secs}` : 'EXPIRED'}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div className="vr-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.15em', marginBottom: 3 }}>ATTEMPTS</div>
+                <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ width: 10, height: 10, background: i < attempts ? DB.red : DB.border, border: `1px solid ${i < attempts ? DB.red : DB.borderBright}` }} />
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <p className="text-center text-sm text-muted-foreground">
-              Attempts: {attempts}/3
-            </p>
+            <button type="submit" className="vr-btn" disabled={isLoading || otp.length !== 6 || timer === 0 || attempts >= 3}>
+              {isLoading
+                ? <><Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />VERIFYING...</>
+                : <>CREATE ACCOUNT</>
+              }
+            </button>
+          </div>
 
-            <Button type="button" variant="outline" disabled={resendCooldown > 0 || isLoading} onClick={handleResend} className="w-full">
-              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
-            </Button>
-
-            <Button type="submit" disabled={isLoading || otp.length !== 6 || timer === 0} className="w-full" size="lg">
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Confirm
-            </Button>
-          </CardContent>
-
-          <CardFooter>
-            <Link to="/register" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Link>
-          </CardFooter>
+          <div style={{ background: DB.surface, border: `1px solid ${DB.border}`, padding: '14px 28px' }}>
+            <button type="button" className="vr-resend" disabled={resendCooldown > 0 || isLoading} onClick={handleResend}>
+              <RefreshCw size={10} />
+              {resendCooldown > 0 ? `RESEND IN ${resendCooldown}s` : 'RESEND CODE'}
+            </button>
+          </div>
         </form>
-      </Card>
-    </motion.div>;
+
+        <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${DB.border}` }}>
+          <Link
+            to="/register"
+            className="vr-mono"
+            style={{ fontSize: 10, color: DB.muted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, letterSpacing: '0.1em', transition: 'color 0.15s' }}
+            onMouseEnter={e => (e.currentTarget.style.color = DB.accent)}
+            onMouseLeave={e => (e.currentTarget.style.color = DB.muted)}
+          >
+            <ArrowLeft size={11} />
+            BACK TO REGISTER
+          </Link>
+        </div>
+      </motion.div>
+    </div>
+  );
 }
+
 export default VerifyRegistration;

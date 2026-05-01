@@ -70,7 +70,9 @@ class ApiClient {
         status: response.status,
         statusText: response.statusText,
         message: errorMsg,
-        data: data
+        data: data,
+        endpoint: endpoint,
+        method: method
       });
 
       // 🔴 CRITICAL: Handle authentication/authorization errors
@@ -83,6 +85,8 @@ class ApiClient {
       }
       const error = new Error(errorMsg);
       error.status = response.status;
+      error.endpoint = endpoint;
+      error.method = method;
       requestAudit.logRequestComplete(endpoint, method, response.status, Date.now() - startTime);
       throw error;
     }
@@ -268,18 +272,64 @@ class ApiClient {
     return this.handleResponse(response);
   }
   async logout() {
-    const response = await fetch(`${API_URL}/auth/logout`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      credentials: 'include'
-    });
+    const endpoint = '/auth/logout';
+    requestAudit.logRequestStart(endpoint, 'POST');
 
-    // Clear tokens on logout
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    this.token = null;
-    this.refreshToken = null;
-    return this.handleResponse(response);
+    console.log('🚪 [api.logout] Logout request initiated');
+    console.log('🚪 [api.logout] Authorization header:', this.getHeaders().Authorization ? 'Present' : 'Missing');
+    console.log('🚪 [api.logout] Token in memory:', this.token ? `${this.token.substring(0, 20)}...` : 'null');
+
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`,
+        this.getFetchOptions('POST')
+      );
+
+      console.log('🚪 [api.logout] Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        url: response.url,
+        headers: {
+          contentType: response.headers.get('content-type'),
+          cors: response.headers.get('access-control-allow-origin')
+        }
+      });
+
+      const data = await this.handleResponse(response);
+      console.log('🚪 [api.logout] Response handled successfully:', data);
+
+      // ✅ CRITICAL: Only clear tokens AFTER successful response validation
+      console.log('🧹 [api.logout] Clearing tokens from storage and memory');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      this.token = null;
+      this.refreshToken = null;
+
+      console.log('✅ [api.logout] Tokens cleared successfully');
+      return data;
+    } catch (error) {
+      console.error('❌ [api.logout] Logout request failed:', {
+        type: error.constructor.name,
+        message: error.message,
+        status: error.status,
+        endpoint: error.endpoint,
+        method: error.method,
+        stack: error.stack
+      });
+
+      // Still clear tokens on error to ensure clean state
+      // This prevents the user from being stuck in limbo
+      console.warn('⚠️ [api.logout] Clearing tokens despite error (error recovery)');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      this.token = null;
+      this.refreshToken = null;
+
+      requestAudit.logRequestComplete(endpoint, 'POST', error.status || 'ERROR', 0);
+
+      console.warn('⚠️ [api.logout] Will re-throw error so UI can handle it gracefully');
+      throw error;
+    }
   }
   async refresh() {
     const response = await fetch(`${API_URL}/auth/refresh`, {

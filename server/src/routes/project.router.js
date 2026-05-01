@@ -23,6 +23,11 @@ router.use(verifyJWT, apiRateLimiter);
  */
 router.get('/', projectController.getAllProjects);
 
+router.get(
+  '/trash/all',
+  projectController.getDeletedProjects
+);
+
 router.post(
   '/',
   validateCreateProject,
@@ -57,6 +62,22 @@ router.delete(
   validateObjectId('id'),
   handleValidationErrors,
   projectController.deleteProject
+);
+
+// Restore deleted project
+router.post(
+  '/:id/restore',
+  validateObjectId('id'),
+  handleValidationErrors,
+  projectController.restoreProject
+);
+
+// Permanently delete project
+router.delete(
+  '/:id/permanent',
+  validateObjectId('id'),
+  handleValidationErrors,
+  projectController.permanentlyDeleteProject
 );
 
 /**

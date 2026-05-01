@@ -4,12 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Bot, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Eye, EyeOff, Loader2, ArrowRight, Lock, Mail } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 const loginSchema = z.object({
@@ -150,93 +145,212 @@ export function LoginForm() {
       });
     }
   };
-  return <motion.div initial={{
-    opacity: 0,
-    y: 20
-  }} animate={{
-    opacity: 1,
-    y: 0
-  }} transition={{
-    duration: 0.4
-  }}>
-      <Card className="border-border/50 shadow-strong">
-        <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-glow">
-            <Bot className="w-6 h-6 text-primary-foreground" />
+  const DB = {
+    bg: '#0E0C0A',
+    surface: '#161210',
+    border: '#252018',
+    borderBright: '#352C1C',
+    accent: '#E8961E',
+    accentDark: '#9A5E0A',
+    text: '#F0E8D8',
+    muted: '#7A6A54',
+    green: '#4ADE80',
+    red: '#FF5C5C',
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: DB.bg, color: DB.text, display: 'flex' }}>
+      <style>{`
+        .login-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+        .login-input { background: ${DB.surface}; border: 1px solid ${DB.border}; color: ${DB.text}; outline: none; padding: 10px 12px; font-size: 12px; font-family: 'JetBrains Mono', monospace; width: 100%; }
+        .login-input::placeholder { color: ${DB.muted}; }
+        .login-input:focus { border-color: ${DB.accent}; }
+        .login-input.error { border-color: ${DB.red}; }
+        .login-btn { background: ${DB.accent}; color: #0E0C0A; border: none; padding: 10px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; cursor: pointer; transition: background 0.15s; font-family: 'JetBrains Mono', monospace; }
+        .login-btn:hover:not(:disabled) { background: ${DB.accentDark}; }
+        .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .login-method-btn { background: transparent; border: 1px solid ${DB.border}; color: ${DB.muted}; padding: 8px 14px; font-size: 10px; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.15s; letter-spacing: 0.1em; }
+        .login-method-btn.active { background: ${DB.borderBright}; color: ${DB.accent}; border-color: ${DB.accent}; }
+        .login-method-btn:hover { color: ${DB.text}; border-color: ${DB.muted}; }
+      `}</style>
+
+      {/* Left sidebar - messaging */}
+      <div style={{ flex: 1, backgroundColor: DB.surface, borderRight: `1px solid ${DB.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 40px', minWidth: 0 }} className="hidden sm:flex">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
+          <div className="login-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.3em', marginBottom: 24 }}>
+            AUTHENTICATION REQUIRED
           </div>
-          <div>
-            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-            <CardDescription className="mt-2">
-              Sign in to your ChatForge account
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
-            {/* STRICT LOGIN METHOD SELECTOR */}
-            <div className="space-y-2">
-              <Label className="font-semibold">Login method</Label>
-              <div className="flex gap-3 p-3 bg-muted rounded-lg">
-                <label className="flex-1 flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-background transition-colors">
-                  <input type="radio" value="password" checked={loginMethod === 'password'} onChange={() => handleLoginMethodChange('password')} className="cursor-pointer" />
-                  <span className="text-sm font-medium">Password</span>
-                </label>
-                <label className="flex-1 flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-background transition-colors">
-                  <input type="radio" value="otp" checked={loginMethod === 'otp'} onChange={() => handleLoginMethodChange('otp')} className="cursor-pointer" />
-                  <span className="text-sm font-medium">Via Email OTP</span>
-                </label>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 300, lineHeight: 1.1, marginBottom: 20, fontStyle: 'italic', fontFamily: 'Fraunces, Georgia, serif' }}>
+            Access your <span style={{ color: DB.accent }}>workspace</span>
+          </h2>
+          <p style={{ fontSize: 13, color: DB.muted, lineHeight: 1.6, marginBottom: 32, maxWidth: 320 }}>
+            Sign in with your email and password, or use a one-time code sent to your inbox. Your workspace awaits.
+          </p>
+          <div style={{ display: 'flex', gap: 16, paddingTop: 32, borderTop: `1px solid ${DB.border}` }}>
+            {[
+              { label: 'SECURE', icon: '🔐' },
+              { label: 'VERIFIED', icon: '✓' },
+            ].map((item, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 16, marginBottom: 4 }}>{item.icon}</div>
+                <div className="login-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.15em' }}>{item.label}</div>
               </div>
-            </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
 
-            {/* EMAIL FIELD - ALWAYS VISIBLE */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="you@example.com" {...register('email')} className={errors.email ? 'border-destructive' : ''} />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-            </div>
+      {/* Right side - form */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', minWidth: 0 }}>
+        <motion.form
+          onSubmit={handleSubmit(onSubmit)}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          style={{ width: '100%', maxWidth: 380 }}
+        >
+          <div className="login-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.3em', marginBottom: 32 }}>
+            SIGN IN
+          </div>
 
-            {/* PASSWORD FIELD - ONLY SHOW FOR PASSWORD METHOD */}
-            {loginMethod === 'password' && <div className="space-y-2 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" {...register('password')} className={errors.password ? 'border-destructive pr-10' : 'pr-10'} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-              </div>}
+          {/* Login method selector */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 32, borderBottom: `1px solid ${DB.border}`, paddingBottom: 16 }}>
+            {[
+              { method: 'password', label: 'PASSWORD' },
+              { method: 'otp', label: 'EMAIL OTP' },
+            ].map((item) => (
+              <button
+                key={item.method}
+                type="button"
+                onClick={() => handleLoginMethodChange(item.method)}
+                className="login-method-btn"
+                style={{
+                  background: loginMethod === item.method ? DB.borderBright : 'transparent',
+                  color: loginMethod === item.method ? DB.accent : DB.muted,
+                  borderColor: loginMethod === item.method ? DB.accent : DB.border,
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
 
-            {/* REMEMBER ME - ONLY SHOW FOR PASSWORD METHOD */}
-            {loginMethod === 'password' && <div className="flex items-center space-x-2 animate-in fade-in duration-200">
-                <Controller name="rememberMe" control={control} render={({
-              field
-            }) => <Checkbox id="rememberMe" checked={field.value} onCheckedChange={field.onChange} />} />
-                <label htmlFor="rememberMe" className="text-sm text-muted-foreground cursor-pointer">
-                  Remember me
-                </label>
-              </div>}
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading || !email || loginMethod === 'password' && !password}>
-              {isLoading ? <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {loginMethod === 'password' ? 'Signing in...' : 'Sending OTP...'}
-                </> : loginMethod === 'password' ? 'Sign in' : 'Send OTP'}
-            </Button>
-            <p className="text-sm text-center text-muted-foreground">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-primary hover:underline font-medium">
-                Sign up
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
-    </motion.div>;
+          {/* Email */}
+          <div style={{ marginBottom: 20 }}>
+            <label className="login-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>
+              <Mail size={11} style={{ display: 'inline-block', marginRight: 6, verticalAlign: 'text-bottom' }} />
+              EMAIL ADDRESS
+            </label>
+            <input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              className="login-input"
+              {...register('email')}
+              style={{ borderColor: errors.email ? DB.red : DB.border }}
+            />
+            {errors.email && (
+              <p className="login-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6, letterSpacing: '0.05em' }}>
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          {/* Password - conditional */}
+          {loginMethod === 'password' && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} style={{ marginBottom: 20 }}>
+              <label className="login-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>
+                <Lock size={11} style={{ display: 'inline-block', marginRight: 6, verticalAlign: 'text-bottom' }} />
+                PASSWORD
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••••"
+                  className="login-input"
+                  {...register('password')}
+                  style={{ borderColor: errors.password ? DB.red : DB.border, paddingRight: 36 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: DB.muted, display: 'flex', alignItems: 'center' }}
+                >
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="login-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6, letterSpacing: '0.05em' }}>
+                  {errors.password.message}
+                </p>
+              )}
+              <div style={{ marginTop: 12 }}>
+                <Link
+                  to="/forgot-password"
+                  className="login-mono"
+                  style={{ fontSize: 9, color: DB.accent, textDecoration: 'none', letterSpacing: '0.1em', transition: 'opacity 0.15s' }}
+                  onMouseEnter={(e) => (e.target.style.opacity = '0.7')}
+                  onMouseLeave={(e) => (e.target.style.opacity = '1')}
+                >
+                  FORGOT PASSWORD?
+                </Link>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Submit button */}
+          <button
+            type="submit"
+            className="login-btn"
+            disabled={isLoading || !email || (loginMethod === 'password' && !password)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              marginBottom: 20,
+              marginTop: 28,
+            }}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                <span>{loginMethod === 'password' ? 'SIGNING IN...' : 'SENDING...'}</span>
+              </>
+            ) : (
+              <>
+                <span>{loginMethod === 'password' ? 'SIGN IN' : 'SEND OTP'}</span>
+                <ArrowRight size={11} />
+              </>
+            )}
+          </button>
+
+          {/* Sign up link */}
+          <p className="login-mono" style={{ fontSize: 10, color: DB.muted, textAlign: 'center', letterSpacing: '0.05em', lineHeight: 1.6 }}>
+            Don't have an account?{' '}
+            <Link
+              to="/register"
+              style={{ color: DB.accent, textDecoration: 'none', transition: 'opacity 0.15s' }}
+              onMouseEnter={(e) => (e.target.style.opacity = '0.7')}
+              onMouseLeave={(e) => (e.target.style.opacity = '1')}
+            >
+              CREATE ONE
+            </Link>
+          </p>
+
+          {/* Status indicator */}
+          <div style={{ marginTop: 32, paddingTop: 20, borderTop: `1px solid ${DB.border}`, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="login-mono" style={{ fontSize: 8, color: DB.green, letterSpacing: '0.1em' }}>● READY</span>
+            <span className="login-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.1em' }}>v1.0</span>
+          </div>
+        </motion.form>
+      </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
+    </div>
+  );
 }

@@ -243,12 +243,27 @@ export const deleteProject = async (projectId, userId) => {
   // Verify ownership and project exists
   await getProjectById(projectId, userId);
 
-  // Soft delete: set deleted_at timestamp
+  const now = new Date();
+
+  // Soft delete all conversations in the project first
+  await prisma.conversation.updateMany({
+    where: {
+      projectId,
+      userId,
+      deletedAt: null, // Only soft-delete active conversations
+    },
+    data: {
+      deletedAt: now,
+      updatedAt: now,
+    },
+  });
+
+  // Soft delete the project itself
   const deletedProject = await prisma.project.update({
     where: { id: projectId },
     data: {
-      deletedAt: new Date(),
-      updatedAt: new Date(),
+      deletedAt: now,
+      updatedAt: now,
     },
     select: {
       id: true,
@@ -256,12 +271,170 @@ export const deleteProject = async (projectId, userId) => {
     },
   });
 
-  // Invalidate cache
+  console.log(`✅ [deleteProject] Soft-deleted project ${projectId} and all conversations`);
+
+  // Invalidate caches
   invalidateUserProjectsCache(userId);
 
   return {
     id: deletedProject.id,
     deletedAt: deletedProject.deletedAt,
+    message: 'Project and all conversations deleted successfully',
+  };
+};
+
+/**
+ * Get deleted projects (trash/history) for a user
+ */
+export const getDeletedProjects = async (userId) => {
+  const deletedProjects = await prisma.project.findMany({
+    where: {
+      userId,
+      deletedAt: {
+        not: null, // Only get soft-deleted projects
+      },
+    },
+    orderBy: { deletedAt: 'desc' },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      deletedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  console.log(`✅ [getDeletedProjects] Found ${deletedProjects.length} deleted projects for user ${userId}`);
+
+  return deletedProjects;
+};
+
+/**
+ * Restore a deleted project and all its conversations
+ */
+export const restoreProject = async (projectId, userId) => {
+  // Verify project exists and belongs to user
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+  });
+
+  if (!project) {
+    throw new NotFoundError('Project', projectId);
+  }
+
+  if (project.userId !== userId) {
+    throw new ForbiddenError('User does not own this project');
+  }
+
+  if (!project.deletedAt) {
+    throw new Error('Project is not deleted, cannot restore');
+  }
+
+  const now = new Date();
+
+  // Restore all conversations in the project
+  await prisma.conversation.updateMany({
+    where: {
+      projectId,
+      userId,
+      deletedAt: {
+        not: null, // Only restore soft-deleted conversations
+      },
+    },
+    data: {
+      deletedAt: null,
+      updatedAt: now,
+    },
+  });
+
+  // Restore the project itself
+  const restoredProject = await prisma.project.update({
+    where: { id: projectId },
+    data: {
+      deletedAt: null,
+      updatedAt: now,
+    },
+    select: {
+      id: true,
+      name: true,
+      deletedAt: true,
+    },
+  });
+
+  console.log(`✅ [restoreProject] Restored project ${projectId} and all its conversations`);
+
+  // Invalidate caches
+  invalidateUserProjectsCache(userId);
+
+  return {
+    id: restoredProject.id,
+    name: restoredProject.name,
+    message: 'Project and all conversations restored successfully',
+  };
+};
+
+/**
+ * Permanently delete a project and all its data (hard delete)
+ */
+export const permanentlyDeleteProject = async (projectId, userId) => {
+  // Verify ownership
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+  });
+
+  if (!project) {
+    throw new NotFoundError('Project', projectId);
+  }
+
+  if (project.userId !== userId) {
+    throw new ForbiddenError('User does not own this project');
+  }
+
+  // Hard delete all messages in conversations of this project
+  await prisma.message.deleteMany({
+    where: {
+      conversation: {
+        projectId,
+      },
+    },
+  });
+
+  // Hard delete all conversations of this project
+  await prisma.conversation.deleteMany({
+    where: {
+      projectId,
+      userId,
+    },
+  });
+
+  // Hard delete all prompts of this project
+  await prisma.prompt.deleteMany({
+    where: {
+      projectId,
+    },
+  });
+
+  // Hard delete all files of this project
+  await prisma.file.deleteMany({
+    where: {
+      projectId,
+    },
+  });
+
+  // Hard delete the project itself
+  await prisma.project.delete({
+    where: { id: projectId },
+  });
+
+  console.log(`🗑️  [permanentlyDeleteProject] Permanently deleted project ${projectId} and all its data`);
+
+  // Invalidate caches
+  invalidateUserProjectsCache(userId);
+
+  return {
+    id: projectId,
+    message: 'Project permanently deleted with all data',
   };
 };
 

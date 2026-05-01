@@ -1,71 +1,89 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Shield, Palette } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-const settingsTabs = [{
-  value: 'security',
-  label: 'Security',
-  icon: <Shield className="w-4 h-4" />,
-  path: '/settings/security'
-}, {
-  value: 'preferences',
-  label: 'Preferences',
-  icon: <Palette className="w-4 h-4" />,
-  path: '/settings/preferences'
-}];
-export function SettingsLayout({
-  children,
-  activeTab
-}) {
+
+const DB = {
+  bg: '#0E0C0A',
+  surface: '#161210',
+  border: '#252018',
+  accent: '#E8961E',
+  accentFaint: 'rgba(232,150,30,0.08)',
+  text: '#F0E8D8',
+  muted: '#7A6A54',
+};
+
+const settingsTabs = [
+  { value: 'security',    label: 'SECURITY',     icon: Shield,  path: '/settings/security' },
+  { value: 'preferences', label: 'PREFERENCES',  icon: Palette, path: '/settings/preferences' },
+];
+
+export function SettingsLayout({ children, activeTab }) {
   const navigate = useNavigate();
-  return <div className="min-h-screen">
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: DB.bg, color: DB.text }}>
+      <style>{`
+        .sl-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+        .sl-nav-btn { background: transparent; border: none; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em; transition: all 0.15s; text-align: left; }
+        .sl-nav-btn:hover:not(.active) { color: ${DB.text} !important; background: rgba(255,255,255,0.03) !important; }
+        .sl-back { background: transparent; border: 1px solid ${DB.border}; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: ${DB.muted}; transition: color 0.15s; }
+        .sl-back:hover { color: ${DB.accent} !important; }
+      `}</style>
+
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-        <div className="container py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
+      <header style={{ position: 'sticky', top: 56, zIndex: 40, borderBottom: `1px solid ${DB.border}`, background: `${DB.bg}ee`, backdropFilter: 'blur(12px)' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, height: 60 }}>
+            <button onClick={() => navigate(-1)} className="sl-back">
+              <ArrowLeft size={12} />
+            </button>
             <div>
-              <h1 className="text-lg font-semibold">Settings</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your account settings and preferences
-              </p>
+              <div className="sl-mono" style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}>SETTINGS</div>
+              <div className="sl-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em' }}>ACCOUNT CONFIGURATION</div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Content */}
-      <div className="container py-8 max-w-4xl">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Sidebar Navigation */}
-          <nav className="md:col-span-1">
-            <div className="space-y-2">
-              {settingsTabs.map(tab => <button key={tab.value} onClick={() => navigate(tab.path)} className={cn('w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-left', activeTab === tab.value ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground')}>
-                  {tab.icon}
-                  <span className="font-medium">{tab.label}</span>
-                </button>)}
-            </div>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 24 }} className="block sm:grid">
+
+          {/* Sidebar nav */}
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {settingsTabs.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  className={`sl-nav-btn${isActive ? ' active' : ''}`}
+                  onClick={() => navigate(tab.path)}
+                  style={{
+                    color: isActive ? DB.accent : DB.muted,
+                    background: isActive ? DB.accentFaint : 'transparent',
+                    borderLeft: isActive ? `2px solid ${DB.accent}` : '2px solid transparent',
+                  }}
+                >
+                  <Icon size={12} />
+                  {tab.label}
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Content Area */}
-          <motion.div key={activeTab} initial={{
-          opacity: 0,
-          y: 10
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} exit={{
-          opacity: 0,
-          y: -10
-        }} transition={{
-          duration: 0.2
-        }} className="md:col-span-3">
+          {/* Content area */}
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
             {children}
           </motion.div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }

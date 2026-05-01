@@ -2,6 +2,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import * as projectService from '../services/project.service.js';
 import { transformProjectForAPI, transformProjectsForAPI, validateTransformedProject } from '../utils/transformers.js';
+import { BadRequestError } from '../utils/errors.js';
 
 /**
  * Get all user projects
@@ -136,6 +137,65 @@ export const deleteProject = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Project deleted successfully',
+    data: result,
+  });
+});
+
+/**
+ * Get deleted projects (trash/history)
+ * GET /api/v1/projects/trash/all
+ */
+export const getDeletedProjects = asyncHandler(async (req, res) => {
+  const userId = req.user.userId;
+
+  const deletedProjects = await projectService.getDeletedProjects(userId);
+
+  res.status(200).json({
+    success: true,
+    message: 'Deleted projects retrieved',
+    data: {
+      projects: deletedProjects,
+      count: deletedProjects.length,
+    },
+  });
+});
+
+/**
+ * Restore deleted project
+ * POST /api/v1/projects/:id/restore
+ */
+export const restoreProject = asyncHandler(async (req, res) => {
+  const userId = req.user.userId;
+  const { id } = req.params;
+
+  const result = await projectService.restoreProject(id, userId);
+
+  res.status(200).json({
+    success: true,
+    message: 'Project restored successfully',
+    data: result,
+  });
+});
+
+/**
+ * Permanently delete project (hard delete)
+ * DELETE /api/v1/projects/:id/permanent
+ */
+export const permanentlyDeleteProject = asyncHandler(async (req, res) => {
+  const userId = req.user.userId;
+  const { id } = req.params;
+
+  // Require confirmation
+  const { confirmation } = req.body;
+  if (confirmation !== 'permanently-delete') {
+    throw new BadRequestError('Confirmation string "permanently-delete" required');
+  }
+
+  const result = await projectService.permanentlyDeleteProject(id, userId);
+
+  res.status(200).json({
+    success: true,
+    message: 'Project permanently deleted',
     data: result,
   });
 });

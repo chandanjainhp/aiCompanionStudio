@@ -44,12 +44,17 @@ if (config.isDevelopment) {
 }
 
 // CORS configuration
+// ✅ CRITICAL: When credentials: true, origin must be specific (not wildcard)
+// ✅ cors() middleware automatically handles OPTIONS preflight requests
 app.use(
   cors({
     origin: config.corsOrigin,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Length', 'X-JSON-Response-Size'],
+    optionsSuccessStatus: 200, // Some legacy browsers (IE11) require 200 for preflight
+    maxAge: 3600 // Pre-flight cache for 1 hour
   })
 );
 

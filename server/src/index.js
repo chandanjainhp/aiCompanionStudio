@@ -16,7 +16,7 @@ validateProductionEnv();
 const uploadDir = path.resolve(config.fileUploadPath);
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
-  console.log(`📁 [Server] Created uploads directory: ${uploadDir}`);
+  console.log(`[Server] Created uploads directory: ${uploadDir}`);
 }
 
 // Start server
@@ -24,7 +24,7 @@ const startServer = async () => {
   try {
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;
-    console.log('✅ Database connected successfully');
+    console.log(' Database connected successfully');
 
     // Start server - Listen on 0.0.0.0 to accept all connections
     const server = app.listen(config.port, '0.0.0.0', () => {
@@ -40,15 +40,15 @@ const startServer = async () => {
 
     // Add error handler to server
     server.on('error', (error) => {
-      console.error('❌ [Server Error]', error.message);
+      console.error(' [Server Error]', error.message);
     });
 
     // Graceful shutdown
     const shutdown = async () => {
-      console.log('\n⏹️  Shutting down gracefully...');
-      
+      console.log('\n  Shutting down gracefully...');
+
       server.close(async () => {
-        console.log('❌ Server stopped');
+        console.log(' Server stopped');
         await prisma.$disconnect();
         console.log('🗄️  Database disconnected');
         process.exit(0);
@@ -56,7 +56,7 @@ const startServer = async () => {
 
       // Force shutdown after 10 seconds
       setTimeout(() => {
-        console.error('❌ Force shutting down');
+        console.error('Force shutting down');
         process.exit(1);
       }, 10000);
     };
@@ -66,16 +66,16 @@ const startServer = async () => {
 
     // Catch uncaught exceptions
     process.on('uncaughtException', (error) => {
-      console.error('❌ [Uncaught Exception]', error);
+      console.error(' [Uncaught Exception]', error);
     });
 
     // Catch unhandled promise rejections
     process.on('unhandledRejection', (reason, promise) => {
-      console.error('❌ [Unhandled Rejection] Promise:', promise);
-      console.error('❌ [Unhandled Rejection] Reason:', reason);
+      console.error(' [Unhandled Rejection] Promise:', promise);
+      console.error(' [Unhandled Rejection] Reason:', reason);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
+    console.error(' Failed to start server:', error.message);
     process.exit(1);
   }
 };

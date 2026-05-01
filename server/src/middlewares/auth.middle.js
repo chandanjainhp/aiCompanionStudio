@@ -8,7 +8,7 @@ import { prisma } from '../config/database.js';
  * JWT Authentication Middleware
  * Verifies JWT token from Authorization header or cookies
  * Attaches decoded user data to req.user
- * 
+ *
  * CRITICAL NOTES:
  * - Token must be present in Authorization header (Bearer <token>) OR cookies
  * - Decodes token and validates user still exists in database
@@ -18,30 +18,30 @@ import { prisma } from '../config/database.js';
  */
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
-    console.log(`🔐 [verifyJWT] Verifying token for endpoint: ${req.method} ${req.originalUrl}`);
-    
+    console.log(`[verifyJWT] Verifying token for endpoint: ${req.method} ${req.originalUrl}`);
+
     // Extract token from Authorization header (Bearer token) or cookies
     const authHeader = req.header('Authorization');
     const tokenFromHeader = authHeader?.replace('Bearer ', '') || null;
     const tokenFromCookie = req.cookies?.accessToken;
-    
+
     // Use header token if available, otherwise fall back to cookie
     const token = tokenFromHeader || tokenFromCookie;
 
-    console.log(`🔐 [verifyJWT] Token source: header=${!!tokenFromHeader}, cookie=${!!tokenFromCookie}`);
+    console.log(`[verifyJWT] Token source: header=${!!tokenFromHeader}, cookie=${!!tokenFromCookie}`);
 
     if (!token) {
-      console.warn('⚠️  [verifyJWT] No authentication token provided');
+      console.warn(' [verifyJWT] No authentication token provided');
       throw new UnauthorizedError('No authentication token provided');
     }
 
-    console.log(`🔐 [verifyJWT] Verifying token for endpoint: ${req.method} ${req.originalUrl}`);
+    console.log(`[verifyJWT] Verifying token for endpoint: ${req.method} ${req.originalUrl}`);
 
     // Verify and decode the token
     // This throws if token is invalid or expired
     const decoded = verifyAccessToken(token);
 
-    console.log(`🔐 [verifyJWT] Token decoded. User ID: ${decoded.userId}`);
+    console.log(`[verifyJWT] Token decoded. User ID: ${decoded.userId}`);
 
     // Fetch user from database to ensure they still exist
     // Prevents using tokens of deleted users
@@ -50,7 +50,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     });
 
     if (!user) {
-      console.warn(`⚠️  [verifyJWT] User not found in database. User ID: ${decoded.userId}`);
+      console.warn(` [verifyJWT] User not found in database. User ID: ${decoded.userId}`);
       throw new UnauthorizedError('User not found');
     }
 
@@ -61,16 +61,16 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
       name: user.name,
     };
 
-    console.log(`✅ [verifyJWT] SUCCESS for user: ${user.email}`);
+    console.log(` [verifyJWT] SUCCESS for user: ${user.email}`);
 
     next();
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      console.error(`🚫 [verifyJWT] Authorization failed: ${error.message}`);
+      console.error(` [verifyJWT] Authorization failed: ${error.message}`);
       throw error;
     }
-    
-    console.error(`🚫 [verifyJWT] Token verification failed: ${error.message}`);
+
+    console.error(` [verifyJWT] Token verification failed: ${error.message}`);
     throw new UnauthorizedError('Invalid or expired token');
   }
 });
@@ -84,7 +84,7 @@ export const verifyProjectOwnership = asyncHandler(async (req, res, next) => {
   const { projectId } = req.params;
   const userId = req.user?.userId;
 
-  console.log('🔐 [verifyProjectOwnership] Checking access:', {
+  console.log('[verifyProjectOwnership] Checking access:', {
     projectId,
     userId,
     userExists: !!req.user,
@@ -108,13 +108,13 @@ export const verifyProjectOwnership = asyncHandler(async (req, res, next) => {
 
   // Check if project exists first
   if (!project) {
-    console.warn(`⚠️  [verifyProjectOwnership] Project does not exist: ${projectId}`);
+    console.warn(` [verifyProjectOwnership] Project does not exist: ${projectId}`);
     throw new ForbiddenError('Project does not exist');
   }
 
   // Check if user owns the project
   if (project.userId !== userId) {
-    console.warn(`⚠️  [verifyProjectOwnership] Access denied - User ownership mismatch:`, {
+    console.warn(` [verifyProjectOwnership] Access denied - User ownership mismatch:`, {
       projectId,
       projectOwnerId: project.userId,
       requestingUserId: userId,

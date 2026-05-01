@@ -88,6 +88,11 @@ export const createConversation = async (projectId, userId, title = 'New Convers
     throw new ForbiddenError('User does not own this project');
   }
 
+  // Check if project is deleted - deleted projects should not be accessible
+  if (project.deletedAt !== null) {
+    throw new NotFoundError('Project', projectId);
+  }
+
   // Validate title
   if (title && title.length > 200) {
     throw new BadRequestError('Title must be less than 200 characters');
@@ -133,7 +138,7 @@ export const getProjectConversations = async (
   sortOrder = 'desc',
   includeMessages = false
 ) => {
-  // Validate project exists and belongs to user
+  // Validate project exists, belongs to user, and is not deleted
   const project = await prisma.project.findUnique({
     where: { id: projectId },
   });
@@ -144,6 +149,11 @@ export const getProjectConversations = async (
 
   if (project.userId !== userId) {
     throw new ForbiddenError('User does not own this project');
+  }
+
+  // Check if project is deleted - deleted projects should not be accessible
+  if (project.deletedAt !== null) {
+    throw new NotFoundError('Project', projectId);
   }
 
   // Validate pagination
@@ -245,7 +255,7 @@ export const getConversationWithMessages = async (
   includeSystem = false,
   messageLimit = 100
 ) => {
-  // Validate project exists and belongs to user
+  // Validate project exists, belongs to user, and is not deleted
   const project = await prisma.project.findUnique({
     where: { id: projectId },
   });
@@ -256,6 +266,11 @@ export const getConversationWithMessages = async (
 
   if (project.userId !== userId) {
     throw new ForbiddenError('User does not own this project');
+  }
+
+  // Check if project is deleted - deleted projects should not be accessible
+  if (project.deletedAt !== null) {
+    throw new NotFoundError('Project', projectId);
   }
 
   // Get conversation and verify it belongs to project and user
@@ -366,6 +381,11 @@ export const sendChatMessage = async (projectId, conversationId, userMessage, us
 
   if (project.userId !== userId) {
     throw new ForbiddenError('User does not own this project');
+  }
+
+  // Check if project is deleted - deleted projects should not be accessible
+  if (project.deletedAt !== null) {
+    throw new NotFoundError('Project', projectId);
   }
 
   const conversation = await prisma.conversation.findUnique({
@@ -622,6 +642,11 @@ export const deleteConversation = async (projectId, conversationId, userId) => {
     throw new ForbiddenError('User does not own this project');
   }
 
+  // Check if project is deleted - deleted projects should not be accessible
+  if (project.deletedAt !== null) {
+    throw new NotFoundError('Project', projectId);
+  }
+
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
   });
@@ -669,6 +694,11 @@ export const updateConversationTitle = async (projectId, conversationId, userId,
 
   if (project.userId !== userId) {
     throw new ForbiddenError('User does not own this project');
+  }
+
+  // Check if project is deleted - deleted projects should not be accessible
+  if (project.deletedAt !== null) {
+    throw new NotFoundError('Project', projectId);
   }
 
   const conversation = await prisma.conversation.findUnique({
