@@ -14,22 +14,10 @@ import {
 import { useProjectsStore } from '@/store/projectsStore';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-
-const DB = {
-  bg: '#0E0C0A',
-  surface: '#161210',
-  surfaceHover: '#1C1814',
-  border: '#252018',
-  borderBright: '#352C1C',
-  accent: '#E8961E',
-  accentDark: '#9A5E0A',
-  accentFaint: 'rgba(232,150,30,0.08)',
-  text: '#F0E8D8',
-  muted: '#7A6A54',
-  green: '#4ADE80',
-  red: '#FF5C5C',
-  redFaint: 'rgba(255,92,92,0.06)',
-};
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const settingsSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -98,9 +86,9 @@ export default function ProjectSettings() {
     if (!projectId) return;
     try {
       await updateProject(projectId, data);
-      toast({ title: 'Settings saved', description: 'Your project settings have been updated.' });
+      toast({ title: 'SETTINGS SAVED', description: 'Your project settings have been updated.' });
     } catch (error) {
-      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Failed to save settings', variant: 'destructive' });
+      toast({ title: 'ERROR', description: error instanceof Error ? error.message : 'Failed to save settings', variant: 'destructive' });
     }
   };
 
@@ -108,197 +96,183 @@ export default function ProjectSettings() {
     if (!projectId) return;
     try {
       await deleteProject(projectId);
-      toast({ title: 'Project deleted', description: 'Your project has been removed.' });
+      toast({ title: 'PROJECT DELETED', description: 'Your project has been removed.' });
       navigate('/dashboard');
     } catch (error) {
-      toast({ title: 'Error', description: error instanceof Error ? error.message : 'Failed to delete project', variant: 'destructive' });
+      toast({ title: 'ERROR', description: error instanceof Error ? error.message : 'Failed to delete project', variant: 'destructive' });
     }
   };
 
   const applyTemplate = template => {
     setValue('systemPrompt', template.content, { shouldDirty: true });
-    toast({ title: 'Template applied', description: `${template.name} template has been applied.` });
+    toast({ title: 'TEMPLATE APPLIED', description: `${template.name} template has been applied.` });
   };
 
   if (!currentProject) return null;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: DB.bg, color: DB.text }}>
-      <style>{`
-        .ps-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-        .ps-input { background: ${DB.surface}; border: 1px solid ${DB.border}; color: ${DB.text}; outline: none; padding: 10px 12px; font-size: 12px; font-family: 'JetBrains Mono', monospace; width: 100%; transition: border-color 0.15s; }
-        .ps-input::placeholder { color: ${DB.muted}; }
-        .ps-input:focus { border-color: ${DB.accent}; }
-        .ps-input.error { border-color: ${DB.red}; }
-        .ps-textarea { background: ${DB.surface}; border: 1px solid ${DB.border}; color: ${DB.text}; outline: none; padding: 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; width: 100%; resize: vertical; transition: border-color 0.15s; line-height: 1.6; }
-        .ps-textarea::placeholder { color: ${DB.muted}; }
-        .ps-textarea:focus { border-color: ${DB.accent}; }
-        .ps-select { background: ${DB.surface}; border: 1px solid ${DB.border}; color: ${DB.text}; outline: none; padding: 10px 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; width: 100%; cursor: pointer; transition: border-color 0.15s; appearance: none; }
-        .ps-select:focus { border-color: ${DB.accent}; }
-        .ps-select option { background: ${DB.surface}; color: ${DB.text}; }
-        .ps-btn-primary { background: ${DB.accent}; color: #0E0C0A; border: none; padding: 10px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; cursor: pointer; transition: background 0.15s; font-family: 'JetBrains Mono', monospace; display: inline-flex; align-items: center; gap: 6px; }
-        .ps-btn-primary:hover:not(:disabled) { background: ${DB.accentDark}; }
-        .ps-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-        .ps-btn-ghost { background: transparent; color: ${DB.muted}; border: 1px solid ${DB.border}; padding: 8px 14px; font-size: 10px; letter-spacing: 0.1em; cursor: pointer; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; display: inline-flex; align-items: center; gap: 6px; }
-        .ps-btn-ghost:hover { color: ${DB.text}; border-color: ${DB.muted}; }
-        .ps-btn-danger { background: transparent; color: ${DB.red}; border: 1px solid ${DB.red}; padding: 9px 16px; font-size: 10px; letter-spacing: 0.12em; cursor: pointer; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; display: inline-flex; align-items: center; gap: 6px; }
-        .ps-btn-danger:hover { background: ${DB.redFaint}; }
-        .ps-tab { background: transparent; border: none; cursor: pointer; padding: 10px 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: ${DB.muted}; transition: color 0.15s; position: relative; }
-        .ps-tab.active { color: ${DB.accent}; }
-        .ps-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px; background: ${DB.accent}; }
-        .ps-tab:hover:not(.active) { color: ${DB.text}; }
-        .ps-section { background: ${DB.surface}; border: 1px solid ${DB.border}; padding: 28px 32px; margin-bottom: 2px; }
-        .ps-template-card { background: ${DB.bg}; border: 1px solid ${DB.border}; padding: 14px 16px; cursor: pointer; transition: all 0.15s; display: flex; align-items: flex-start; gap: 12px; text-align: left; width: 100%; }
-        .ps-template-card:hover { border-color: ${DB.accent}; background: ${DB.accentFaint}; }
-        .ps-range { -webkit-appearance: none; width: 100%; height: 3px; background: ${DB.border}; outline: none; border-radius: 0; }
-        .ps-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: ${DB.accent}; cursor: pointer; border-radius: 0; }
-        .ps-range::-moz-range-thumb { width: 14px; height: 14px; background: ${DB.accent}; cursor: pointer; border: none; border-radius: 0; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
-
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header style={{ position: 'sticky', top: 56, zIndex: 40, borderBottom: `1px solid ${DB.border}`, background: `${DB.bg}ee`, backdropFilter: 'blur(12px)' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <button onClick={() => navigate(-1)} className="ps-btn-ghost" style={{ padding: '6px 10px' }}>
-                <ArrowLeft size={12} />
-              </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, background: DB.borderBright, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Bot size={16} style={{ color: DB.accent }} />
-                </div>
-                <div>
-                  <div className="ps-mono" style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.05em' }}>{currentProject.name}</div>
-                  <div className="ps-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.2em' }}>PROJECT SETTINGS</div>
-                </div>
+      <header className="sticky top-0 z-40 border-b-2 border-primary bg-background/90 backdrop-blur-md">
+        <div className="max-w-[900px] mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate(-1)} className="w-8 h-8 border-2 border-primary flex items-center justify-center hover:bg-muted/20 transition-colors">
+              <ArrowLeft size={16} />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 border-2 border-primary flex items-center justify-center bg-background">
+                <Bot size={16} className="text-primary" />
+              </div>
+              <div>
+                <div className="font-display text-[16px] font-black uppercase tracking-tight leading-none">{currentProject.name}</div>
+                <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.15em] mt-1">PROJECT SETTINGS</div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Link to={`/projects/${projectId}/chat`} style={{ textDecoration: 'none' }}>
-                <button className="ps-btn-ghost">
-                  <MessageSquare size={11} />
-                  OPEN CHAT
-                </button>
-              </Link>
-              <button
-                className="ps-btn-primary"
-                onClick={handleSubmit(onSubmit)}
-                disabled={!isDirty || isLoading}
-              >
-                {isLoading ? (
-                  <><Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />SAVING...</>
-                ) : (
-                  <><Save size={12} />SAVE</>
-                )}
-              </button>
-            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link to={`/projects/${projectId}/chat`}>
+              <Button variant="outline" className="rounded-none border-2 border-primary font-mono text-[11px] font-bold tracking-[0.1em] uppercase gap-2">
+                <MessageSquare size={14} />
+                OPEN CHAT
+              </Button>
+            </Link>
+            <Button
+              onClick={handleSubmit(onSubmit)}
+              disabled={!isDirty || isLoading}
+              className="rounded-none border-2 border-primary bg-primary text-background hover:bg-foreground font-mono text-[11px] font-bold tracking-[0.1em] uppercase gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  SAVING...
+                </>
+              ) : (
+                <>
+                  <Save size={14} />
+                  SAVE
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </header>
 
       {/* Content */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
-
+      <div className="max-w-[900px] mx-auto px-6 py-8">
         {/* Tab bar */}
-        <div style={{ display: 'flex', gap: 28, borderBottom: `1px solid ${DB.border}`, marginBottom: 24 }}>
+        <div className="flex gap-8 border-b-2 border-primary mb-8">
           {TABS.map(tab => (
             <button
               key={tab}
-              className={`ps-tab${activeTab === tab ? ' active' : ''}`}
+              className={cn(
+                "pb-3 font-mono text-[11px] font-bold tracking-[0.2em] uppercase relative transition-colors",
+                activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}
               onClick={() => setActiveTab(tab)}
             >
               {tab}
+              {activeTab === tab && (
+                <div className="absolute bottom-[-2px] left-0 right-0 h-[2px] bg-primary" />
+              )}
             </button>
           ))}
         </div>
 
         <AnimatePresence mode="wait">
           {activeTab === 'GENERAL' && (
-            <motion.div key="general" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-
+            <motion.div key="general" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-8">
               {/* Project info */}
-              <div className="ps-section">
-                <div className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.25em', marginBottom: 24 }}>PROJECT INFORMATION</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  <div>
-                    <label className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>PROJECT NAME</label>
-                    <input className={`ps-input${errors.name ? ' error' : ''}`} {...register('name')} />
-                    {errors.name && <p className="ps-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6 }}>{errors.name.message}</p>}
+              <div className="bg-muted/20 border-2 border-primary p-8">
+                <div className="font-mono text-[11px] font-bold text-muted-foreground tracking-[0.25em] uppercase mb-8 pb-4 border-b-2 border-primary">
+                  PROJECT INFORMATION
+                </div>
+                
+                <div className="flex flex-col gap-6">
+                  <div className="space-y-2">
+                    <Label className="font-mono text-[11px] uppercase tracking-[0.15em] font-bold block">PROJECT NAME</Label>
+                    <Input 
+                      className={cn("border-2 border-primary rounded-none h-12 font-mono text-[12px] bg-background focus-visible:ring-0", errors.name && "border-destructive")} 
+                      {...register('name')} 
+                    />
+                    {errors.name && <p className="font-mono text-[10px] text-destructive tracking-[0.05em] uppercase mt-2">{errors.name.message}</p>}
                   </div>
-                  <div>
-                    <label className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>DESCRIPTION</label>
+                  
+                  <div className="space-y-2">
+                    <Label className="font-mono text-[11px] uppercase tracking-[0.15em] font-bold block">DESCRIPTION</Label>
                     <textarea
-                      className="ps-textarea"
-                      rows={3}
+                      className="w-full bg-background border-2 border-primary text-foreground outline-none p-4 font-mono text-[12px] resize-y min-h-[100px] focus:border-foreground transition-colors placeholder:text-muted-foreground"
                       placeholder="What does this project do?"
                       {...register('description')}
                     />
                   </div>
-                  <div style={{ display: 'flex', gap: 32, paddingTop: 8, borderTop: `1px solid ${DB.border}` }}>
+                  
+                  <div className="flex flex-wrap gap-12 pt-6 border-t-2 border-primary">
                     <div>
-                      <div className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.1em', marginBottom: 4 }}>CREATED</div>
-                      <div className="ps-mono" style={{ fontSize: 10, color: DB.text }}>
-                        {currentProject.createdAt ? format(new Date(currentProject.createdAt), 'MMM d, yyyy').toUpperCase() : '—'}
+                      <div className="font-mono text-[10px] text-muted-foreground tracking-[0.1em] uppercase mb-2">CREATED</div>
+                      <div className="font-mono text-[12px] font-bold tracking-[0.05em] uppercase">
+                        {currentProject.createdAt ? format(new Date(currentProject.createdAt), 'MMM d, yyyy') : '—'}
                       </div>
                     </div>
                     <div>
-                      <div className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.1em', marginBottom: 4 }}>CONVERSATIONS</div>
-                      <div className="ps-mono" style={{ fontSize: 10, color: DB.text }}>{currentProject.conversationCount ?? 0}</div>
+                      <div className="font-mono text-[10px] text-muted-foreground tracking-[0.1em] uppercase mb-2">CONVERSATIONS</div>
+                      <div className="font-mono text-[12px] font-bold tracking-[0.05em] uppercase">{currentProject.conversationCount ?? 0}</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div style={{ height: 2 }} />
-
               {/* Danger zone */}
-              <div className="ps-section" style={{ borderColor: `${DB.red}40`, background: DB.redFaint }}>
-                <div className="ps-mono" style={{ fontSize: 9, color: DB.red, letterSpacing: '0.25em', marginBottom: 8 }}>DANGER ZONE</div>
-                <p className="ps-mono" style={{ fontSize: 10, color: DB.muted, marginBottom: 20, lineHeight: 1.6 }}>
-                  Permanently delete this project and all its conversations. Cannot be undone.
+              <div className="border-2 border-destructive bg-destructive/10 p-8">
+                <div className="font-mono text-[11px] font-bold text-destructive tracking-[0.25em] uppercase mb-4">
+                  DANGER ZONE
+                </div>
+                <p className="font-mono text-[12px] text-muted-foreground mb-6 leading-relaxed max-w-md">
+                  Permanently delete this project and all its conversations. This action cannot be undone.
                 </p>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <button className="ps-btn-danger">
-                      <Trash2 size={11} />
+                    <Button variant="outline" className="rounded-none border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground font-mono text-[11px] font-bold tracking-[0.1em] uppercase gap-2 h-12 px-6">
+                      <Trash2 size={14} />
                       DELETE PROJECT
-                    </button>
+                    </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent style={{ background: DB.surface, border: `1px solid ${DB.border}`, borderRadius: 0, color: DB.text }}>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="ps-mono" style={{ fontSize: 13, color: DB.text, letterSpacing: '0.05em' }}>
-                        Delete this project?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="ps-mono" style={{ fontSize: 11, color: DB.muted, lineHeight: 1.6 }}>
-                        This will permanently delete "{currentProject.name}" and all its conversations. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="ps-btn-ghost" style={{ border: `1px solid ${DB.border}` }}>CANCEL</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} className="ps-btn-danger" style={{ background: DB.redFaint }}>
-                        DELETE
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
+                  <AlertDialogContent className="bg-background border-2 border-primary rounded-none p-0 overflow-hidden">
+                    <div className="p-8">
+                      <AlertDialogHeader className="mb-6">
+                        <AlertDialogTitle className="font-display text-[24px] font-black uppercase tracking-tight">
+                          DELETE THIS PROJECT?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="font-mono text-[12px] text-muted-foreground leading-relaxed mt-4">
+                          This will permanently delete "{currentProject.name}" and all its conversations. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="gap-4 sm:gap-4 mt-8">
+                        <AlertDialogCancel className="rounded-none border-2 border-primary font-mono text-[11px] font-bold tracking-[0.1em] uppercase m-0">CANCEL</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="rounded-none border-2 border-destructive bg-destructive text-destructive-foreground hover:bg-destructive/90 font-mono text-[11px] font-bold tracking-[0.1em] uppercase m-0">
+                          DELETE
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </div>
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
-
             </motion.div>
           )}
 
           {activeTab === 'MODEL' && (
             <motion.div key="model" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-              <div className="ps-section">
-                <div className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.25em', marginBottom: 24 }}>MODEL CONFIGURATION</div>
+              <div className="bg-muted/20 border-2 border-primary p-8">
+                <div className="font-mono text-[11px] font-bold text-muted-foreground tracking-[0.25em] uppercase mb-8 pb-4 border-b-2 border-primary">
+                  MODEL CONFIGURATION
+                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                <div className="flex flex-col gap-8">
                   {/* Model select */}
-                  <div>
-                    <label className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>AI MODEL</label>
-                    <div style={{ position: 'relative' }}>
+                  <div className="space-y-2">
+                    <Label className="font-mono text-[11px] uppercase tracking-[0.15em] font-bold block">AI MODEL</Label>
+                    <div className="relative">
                       <select
-                        className="ps-select"
+                        className="w-full bg-background border-2 border-primary text-foreground outline-none p-3 pl-4 pr-10 font-mono text-[12px] appearance-none focus:border-foreground transition-colors cursor-pointer"
                         value={model}
                         onChange={e => setValue('model', e.target.value, { shouldDirty: true })}
                       >
@@ -308,54 +282,55 @@ export default function ProjectSettings() {
                           </option>
                         ))}
                       </select>
-                      <ChevronRight size={12} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: DB.muted, pointerEvents: 'none' }} />
+                      <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
 
                   {/* Temperature */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-                      <label className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em' }}>TEMPERATURE</label>
-                      <span className="ps-mono" style={{ fontSize: 14, color: DB.accent, fontWeight: 700 }}>{temperature.toFixed(1)}</span>
+                  <div className="space-y-4 pt-4 border-t-2 border-primary/20">
+                    <div className="flex justify-between items-baseline">
+                      <Label className="font-mono text-[11px] uppercase tracking-[0.15em] font-bold block">TEMPERATURE</Label>
+                      <span className="font-display text-[20px] font-black text-primary">{temperature.toFixed(1)}</span>
                     </div>
                     <input
                       type="range"
-                      className="ps-range"
+                      className="w-full h-1 bg-primary appearance-none outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-foreground [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:rounded-none [&::-webkit-slider-thumb]:rounded-none"
                       min={0} max={1} step={0.1}
                       value={temperature}
                       onChange={e => setValue('temperature', parseFloat(e.target.value), { shouldDirty: true })}
                     />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                      <span className="ps-mono" style={{ fontSize: 8, color: DB.muted }}>FOCUSED</span>
-                      <span className="ps-mono" style={{ fontSize: 8, color: DB.muted }}>CREATIVE</span>
+                    <div className="flex justify-between">
+                      <span className="font-mono text-[10px] text-muted-foreground tracking-[0.1em] uppercase">FOCUSED</span>
+                      <span className="font-mono text-[10px] text-muted-foreground tracking-[0.1em] uppercase">CREATIVE</span>
                     </div>
                   </div>
 
                   {/* Max tokens */}
-                  <div>
-                    <label className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>MAX TOKENS</label>
-                    <input
+                  <div className="space-y-2 pt-4 border-t-2 border-primary/20">
+                    <Label className="font-mono text-[11px] uppercase tracking-[0.15em] font-bold block">MAX TOKENS</Label>
+                    <Input
                       type="number"
-                      className="ps-input"
+                      className="border-2 border-primary rounded-none h-12 font-mono text-[12px] bg-background focus-visible:ring-0 max-w-[200px]"
                       min={256} max={8192}
                       {...register('maxTokens', { valueAsNumber: true })}
                     />
-                    <p className="ps-mono" style={{ fontSize: 9, color: DB.muted, marginTop: 6 }}>RANGE: 256 – 8192</p>
+                    <p className="font-mono text-[10px] text-muted-foreground tracking-[0.1em] uppercase mt-2">RANGE: 256 – 8192</p>
                   </div>
 
                   {/* Reset defaults */}
-                  <div>
-                    <button
+                  <div className="pt-8 border-t-2 border-primary flex justify-end">
+                    <Button
                       type="button"
-                      className="ps-btn-ghost"
+                      variant="outline"
+                      className="rounded-none border-2 border-primary font-mono text-[11px] font-bold tracking-[0.1em] uppercase gap-2 h-12 px-6"
                       onClick={() => {
                         setValue('temperature', 0.7, { shouldDirty: true });
                         setValue('maxTokens', 2048, { shouldDirty: true });
                       }}
                     >
-                      <RotateCcw size={11} />
+                      <RotateCcw size={14} />
                       RESET DEFAULTS
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -363,46 +338,63 @@ export default function ProjectSettings() {
           )}
 
           {activeTab === 'PROMPTS' && (
-            <motion.div key="prompts" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-
-              {/* System prompt editor */}
-              <div className="ps-section">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 24 }}>
-                  <div className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.25em' }}>SYSTEM PROMPT</div>
-                  <div className="ps-mono" style={{ fontSize: 9, color: systemPrompt?.length > 3600 ? DB.red : DB.muted }}>
-                    {systemPrompt?.length || 0} / 4000
-                  </div>
+            <motion.div key="prompts" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-8">
+              {/* System prompt editor — WIRED editorial style */}
+              <div className="border-2 border-foreground bg-background overflow-hidden relative group">
+                <div className="flex justify-between items-baseline px-6 py-3 border-b-2 border-foreground bg-foreground text-background">
+                  <span className="font-mono text-[12px] font-bold tracking-[0.2em] uppercase">SYSTEM PROMPT</span>
+                  <span className={cn("font-mono text-[10px] font-bold tracking-[0.1em] uppercase", systemPrompt?.length > 3600 ? "text-destructive" : "text-background/70")}>
+                    {systemPrompt?.length || 0}&nbsp;/&nbsp;4000
+                  </span>
                 </div>
                 <textarea
-                  className="ps-textarea"
-                  rows={12}
+                  className="w-full bg-background text-foreground border-none outline-none p-6 font-mono text-[13px] leading-relaxed resize-y min-h-[300px] placeholder:text-muted-foreground placeholder:italic"
                   placeholder="You are a helpful assistant..."
                   {...register('systemPrompt')}
                 />
+                <div className="flex gap-8 items-center px-6 py-3 border-t-2 border-foreground bg-muted/20">
+                  <span className="font-mono text-[10px] text-muted-foreground tracking-[0.1em] uppercase font-bold">
+                    {systemPrompt ? `~${Math.ceil(systemPrompt.split(/\\s+/).filter(Boolean).length / 150)} MIN READ` : 'NO PROMPT'}
+                  </span>
+                  <span className="font-mono text-[10px] text-muted-foreground tracking-[0.1em] uppercase font-bold">
+                    {systemPrompt ? `${systemPrompt.split(/\\s+/).filter(Boolean).length} WORDS` : '—'}
+                  </span>
+                  {systemPrompt?.length > 3600 && (
+                    <span className="font-mono text-[10px] text-destructive tracking-[0.1em] uppercase font-bold ml-auto">
+                      APPROACHING LIMIT
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Templates */}
-              <div className="ps-section">
-                <div className="ps-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.25em', marginBottom: 20 }}>PROMPT TEMPLATES</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 2 }}>
+              <div className="bg-muted/20 border-2 border-primary p-8">
+                <div className="font-mono text-[11px] font-bold text-muted-foreground tracking-[0.25em] uppercase mb-8 pb-4 border-b-2 border-primary">
+                  PROMPT TEMPLATES
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {promptTemplates.map(template => (
-                    <button key={template.id} className="ps-template-card" onClick={() => applyTemplate(template)}>
-                      <div style={{ width: 32, height: 32, background: DB.borderBright, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <template.icon size={15} style={{ color: DB.accent }} />
+                    <button 
+                      key={template.id} 
+                      className="bg-background border-2 border-primary p-6 text-left hover:bg-foreground hover:text-background transition-colors group flex items-start gap-4" 
+                      onClick={() => applyTemplate(template)}
+                    >
+                      <div className="w-10 h-10 border-2 border-primary bg-muted/20 flex items-center justify-center flex-shrink-0 group-hover:border-background group-hover:bg-background/20">
+                        <template.icon size={18} className="text-primary group-hover:text-background" />
                       </div>
                       <div>
-                        <div className="ps-mono" style={{ fontSize: 10, color: DB.text, marginBottom: 3, letterSpacing: '0.03em' }}>{template.name}</div>
-                        <div className="ps-mono" style={{ fontSize: 9, color: DB.muted }}>{template.description}</div>
+                        <div className="font-display text-[16px] font-black uppercase tracking-tight mb-2">{template.name}</div>
+                        <div className="font-mono text-[11px] text-muted-foreground group-hover:text-background/80 leading-relaxed">
+                          {template.description}
+                        </div>
                       </div>
                     </button>
                   ))}
                 </div>
               </div>
-
             </motion.div>
           )}
         </AnimatePresence>
-
       </div>
     </div>
   );

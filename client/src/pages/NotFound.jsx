@@ -2,16 +2,8 @@ import { useLocation, Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
-
-const DB = {
-  bg: '#0E0C0A',
-  surface: '#161210',
-  border: '#252018',
-  accent: '#E8961E',
-  text: '#F0E8D8',
-  muted: '#7A6A54',
-  red: '#FF5C5C',
-};
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
   const location = useLocation();
@@ -21,35 +13,19 @@ export default function NotFound() {
   }, [location.pathname]);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: DB.bg, color: DB.text, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <style>{`
-        .nf-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-        .nf-back:hover { color: ${DB.accent} !important; }
-      `}</style>
-
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        style={{ textAlign: 'center', maxWidth: 480 }}
+        className="text-center max-w-[480px] w-full"
       >
         {/* Glitch number */}
-        <div
-          className="nf-mono"
-          style={{
-            fontSize: 'clamp(96px, 20vw, 160px)',
-            fontWeight: 700,
-            lineHeight: 1,
-            color: DB.border,
-            letterSpacing: '-0.05em',
-            marginBottom: 4,
-            userSelect: 'none',
-          }}
-        >
+        <div className="font-mono text-[clamp(96px,20vw,160px)] font-bold leading-none text-primary/20 tracking-tighter mb-1 select-none flex justify-center">
           <motion.span
             animate={{ opacity: [1, 0.4, 1, 0.7, 1] }}
             transition={{ duration: 3.5, repeat: Infinity, repeatDelay: 4 }}
-            style={{ color: DB.red }}
+            className="text-destructive"
           >
             4
           </motion.span>
@@ -57,73 +33,43 @@ export default function NotFound() {
           <motion.span
             animate={{ opacity: [1, 0.4, 1, 0.7, 1] }}
             transition={{ duration: 3.5, repeat: Infinity, repeatDelay: 4, delay: 0.15 }}
-            style={{ color: DB.red }}
+            className="text-destructive"
           >
             4
           </motion.span>
         </div>
 
-        <div className="nf-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.3em', marginBottom: 20 }}>
+        <div className="font-mono text-[11px] text-muted-foreground tracking-[0.3em] uppercase mb-8">
           ROUTE NOT FOUND
         </div>
 
-        <div
-          style={{
-            fontFamily: 'Fraunces, Georgia, serif',
-            fontSize: 24,
-            fontStyle: 'italic',
-            fontWeight: 300,
-            color: DB.text,
-            marginBottom: 12,
-            lineHeight: 1.3,
-          }}
-        >
-          This page doesn't exist.
+        <div className="font-display text-[32px] font-black uppercase tracking-tight text-foreground mb-4 leading-tight">
+          THIS PAGE DOESN'T EXIST.
         </div>
 
-        <p className="nf-mono" style={{ fontSize: 11, color: DB.muted, marginBottom: 36, lineHeight: 1.7 }}>
-          <span style={{ color: DB.accent }}>{location.pathname}</span>
-          {' '}was not found on this server.
+        <p className="font-mono text-[12px] text-muted-foreground mb-10 leading-relaxed max-w-sm mx-auto">
+          <span className="text-primary font-bold">{location.pathname}</span>
+          {' '}WAS NOT FOUND ON THIS SERVER.
         </p>
 
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', alignItems: 'center' }}>
-          <Link
-            to="/"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              backgroundColor: DB.accent,
-              color: '#0E0C0A',
-              textDecoration: 'none',
-              padding: '10px 22px',
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: '0.15em',
-            }}
-          >
-            <ArrowLeft size={11} />
-            BACK TO HOME
+        <div className="flex gap-4 justify-center items-center">
+          <Link to="/">
+            <Button className="rounded-none border-2 border-primary bg-primary text-background hover:bg-foreground font-mono text-[11px] font-bold tracking-[0.1em] uppercase gap-2 h-10 px-6">
+              <ArrowLeft size={14} />
+              BACK TO HOME
+            </Button>
           </Link>
 
           <Link
             to="/dashboard"
-            className="nf-back nf-mono"
-            style={{
-              fontSize: 10,
-              color: DB.muted,
-              textDecoration: 'none',
-              letterSpacing: '0.1em',
-              transition: 'color 0.15s',
-            }}
+            className="font-mono text-[11px] text-muted-foreground hover:text-primary tracking-[0.1em] transition-colors uppercase font-bold px-4 h-10 flex items-center"
           >
             DASHBOARD →
           </Link>
         </div>
 
         {/* Status */}
-        <div className="nf-mono" style={{ marginTop: 48, fontSize: 8, color: DB.border, letterSpacing: '0.2em' }}>
+        <div className="font-mono mt-16 text-[10px] text-primary/40 tracking-[0.2em] uppercase font-bold">
           ERR_NOT_FOUND · {new Date().toISOString().split('T')[0]}
         </div>
       </motion.div>

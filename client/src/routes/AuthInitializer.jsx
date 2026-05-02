@@ -16,22 +16,23 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { ErrorPage } from '@/components/ErrorPage';
+import { motion } from 'framer-motion';
+
 let authInitCallCount = 0;
-export function AuthInitializer({
-  children
-}) {
+
+export function AuthInitializer({ children }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [initError, setInitError] = useState(null);
-  const {
-    initializeAuth,
-    isLoading: storeIsLoading
-  } = useAuthStore();
+  const { initializeAuth, isLoading: storeIsLoading } = useAuthStore();
+  
   console.log(`🔐 [AuthInitializer] Component render, isInitialized=${isInitialized}`);
+  
   useEffect(() => {
     authInitCallCount++;
     console.log(`🔐 [AuthInitializer] useEffect INIT CALL #${authInitCallCount}`);
     let mounted = true;
     let timeoutId;
+    
     const init = async () => {
       try {
         console.log(`🔐 [AuthInitializer] Call #${authInitCallCount}: Starting authentication initialization...`);
@@ -82,43 +83,22 @@ export function AuthInitializer({
   // This is CRITICAL - no routes can evaluate until auth is verified
   if (!isInitialized) {
     console.log(`🔐 [AuthInitializer] BLOCKING RENDER - storeIsLoading=${storeIsLoading}, isInitialized=${isInitialized}`);
-    return <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5'
-    }}>
-        <div style={{
-        textAlign: 'center'
-      }}>
-          <div style={{
-          display: 'inline-block',
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          border: '4px solid #e0e0e0',
-          borderTopColor: '#1f2937',
-          animation: 'spin 1s linear infinite'
-        }} />
-          <p style={{
-          marginTop: '20px',
-          color: '#666',
-          fontSize: '14px'
-        }}>
-            Initializing authentication...
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <motion.div animate={{ opacity: [1, 0.25, 1] }} transition={{ duration: 1.4, repeat: Infinity }} className="flex flex-col items-center gap-4">
+          <div className="w-6 h-6 bg-primary" />
+          <p className="font-mono text-[10px] text-muted-foreground tracking-[0.15em] uppercase">
+            INITIALIZING AUTHENTICATION...
           </p>
-          <style>{`
-            @keyframes spin {
-              to { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
-      </div>;
+        </motion.div>
+      </div>
+    );
   }
+  
   console.log('✅ [AuthInitializer] Rendering children');
   // SAFE TO RENDER: Auth initialization is complete
   // Protected routes can now safely check isAuthenticated
   return <>{children}</>;
 }
+
 export default AuthInitializer;

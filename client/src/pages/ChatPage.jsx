@@ -10,20 +10,6 @@ import useApiErrorHandler from '@/hooks/useApiErrorHandler';
 import { cn } from '@/lib/utils';
 import { isToday, isYesterday, subDays, isAfter } from 'date-fns';
 
-const CP = {
-  sidebarBg: '#0C0A08',
-  sidebarBorder: '#1E1912',
-  mainBg: '#131109',
-  accent: '#0D9488',
-  accentBg: 'rgba(13,148,136,0.08)',
-  accentBorder: 'rgba(13,148,136,0.35)',
-  text: '#E2D9CE',
-  muted: '#6A5F53',
-  mutedBright: '#9A8A78',
-  hover: 'rgba(255,255,255,0.035)',
-  red: '#EF4444',
-};
-
 export default function ChatPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -51,14 +37,6 @@ export default function ChatPage() {
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
   const editInputRef = useRef(null);
-
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,500&family=DM+Mono:wght@400;500&display=swap';
-    document.head.appendChild(link);
-    return () => { if (document.head.contains(link)) document.head.removeChild(link); };
-  }, []);
 
   useEffect(() => {
     if (editingId && editInputRef.current) {
@@ -179,88 +157,39 @@ export default function ChatPage() {
 
   return (
     <TooltipProvider>
-      <style>{`
-        .cp-dm { font-family: 'DM Mono', 'Courier New', monospace; }
-        .cp-serif { font-family: 'Playfair Display', Georgia, serif; }
-        .cp-conv-item { transition: background 0.12s; cursor: pointer; }
-        .cp-conv-item:hover { background: ${CP.hover}; }
-        .cp-conv-actions { opacity: 0; transition: opacity 0.12s; }
-        .cp-conv-item:hover .cp-conv-actions { opacity: 1; }
-        .cp-new-btn:hover { background: rgba(13,148,136,0.12) !important; color: ${CP.accent} !important; }
-        .cp-new-btn:hover .cp-new-icon { color: ${CP.accent}; }
-        .cp-icon-btn { background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: color 0.12s; }
-        .cp-edit-btn:hover { color: ${CP.mutedBright} !important; }
-        .cp-del-btn:hover { color: ${CP.red} !important; }
-        .cp-toggle:hover { border-color: ${CP.accent} !important; color: ${CP.accent} !important; }
-        .cp-scroll::-webkit-scrollbar { width: 4px; }
-        .cp-scroll::-webkit-scrollbar-track { background: transparent; }
-        .cp-scroll::-webkit-scrollbar-thumb { background: ${CP.sidebarBorder}; border-radius: 2px; }
-        .cp-edit-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(13,148,136,0.4); outline: none; color: ${CP.text}; font-size: 11px; padding: 2px 6px; flex: 1; min-width: 0; font-family: 'DM Mono', monospace; }
-        .cp-edit-input:focus { border-color: ${CP.accent}; }
-      `}</style>
-
-      <div style={{ height: 'calc(100vh - 56px)', display: 'flex', overflow: 'hidden', backgroundColor: CP.mainBg, position: 'relative' }}>
-
+      <div className="flex h-[calc(100vh-48px)] overflow-hidden bg-background relative">
         {/* Mobile overlay */}
         <div
           onClick={toggleProjectSidebar}
-          style={{
-            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)',
-            backdropFilter: 'blur(4px)', zIndex: 40,
-            opacity: projectSidebarOpen ? 1 : 0,
-            pointerEvents: projectSidebarOpen ? 'auto' : 'none',
-            transition: 'opacity 0.25s',
-          }}
-          className="md:hidden"
+          className={cn(
+            "fixed inset-0 bg-foreground/70 backdrop-blur-sm z-40 md:hidden transition-opacity duration-250",
+            projectSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          )}
         />
 
         {/* SIDEBAR */}
         <aside
           className={cn(
-            'h-screen flex-col flex transition-all duration-300 ease-in-out',
-            'fixed inset-y-0 left-0 z-50',
-            'md:relative md:z-30',
+            'h-full flex-col flex transition-all duration-300 ease-in-out border-r-2 border-primary bg-muted/30 fixed inset-y-0 left-0 z-50 md:relative md:z-30 pt-[48px] md:pt-0',
             !projectSidebarOpen
               ? '-translate-x-full md:w-0 md:opacity-0 md:translate-x-0'
               : sidebarCollapsed
                 ? 'translate-x-0 md:w-[64px]'
-                : 'translate-x-0 md:w-[260px]'
+                : 'translate-x-0 md:w-[260px] w-[260px]'
           )}
-          style={{ width: isMobile ? 260 : undefined, backgroundColor: CP.sidebarBg, borderRight: `1px solid ${CP.sidebarBorder}` }}
         >
-
           {/* Sidebar header — project identity */}
-          <div
-            style={{
-              padding: '20px 16px 16px',
-              borderBottom: `1px solid ${CP.sidebarBorder}`,
-              display: 'flex', alignItems: 'flex-start', gap: 10,
-              minHeight: 72,
-            }}
-          >
-            <div
-              style={{
-                width: 28, height: 28, borderRadius: 6, flexShrink: 0, marginTop: 2,
-                backgroundColor: CP.accentBg, border: `1px solid ${CP.accentBorder}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              <Sparkles size={13} color={CP.accent} />
+          <div className="p-4 border-b-2 border-primary min-h-[72px] flex items-start gap-3 bg-muted/50">
+            <div className="w-[28px] h-[28px] shrink-0 mt-0.5 bg-background border-2 border-primary flex items-center justify-center">
+              <Sparkles size={14} className="text-primary" />
             </div>
             {showFullSidebar && (
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div
-                  className="cp-serif"
-                  style={{
-                    fontSize: 14, fontWeight: 600, color: CP.text,
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                    lineHeight: 1.25,
-                  }}
-                >
+              <div className="min-w-0 flex-1">
+                <div className="font-display font-bold text-[16px] text-foreground truncate leading-[1.25]">
                   {currentProject?.name || 'Project'}
                 </div>
                 {currentProject?.model && (
-                  <div className="cp-dm" style={{ fontSize: 9, color: CP.muted, marginTop: 3, letterSpacing: '0.05em' }}>
+                  <div className="font-mono text-[10px] text-muted mt-1 tracking-[0.05em] uppercase font-bold">
                     {currentProject.model.split('/').pop()}
                   </div>
                 )}
@@ -269,46 +198,33 @@ export default function ChatPage() {
           </div>
 
           {/* New conversation button */}
-          <div style={{ padding: showFullSidebar ? '10px 10px 8px' : '10px 8px 8px' }}>
+          <div className={cn("p-2", showFullSidebar ? "px-4 pt-4" : "px-2 pt-4")}>
             <button
-              className="cp-dm cp-new-btn"
               onClick={() => {
                 createConversationInStore(projectId);
                 if (isMobile) toggleProjectSidebar();
               }}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center',
-                gap: showFullSidebar ? 8 : 0,
-                justifyContent: showFullSidebar ? 'flex-start' : 'center',
-                padding: showFullSidebar ? '7px 10px' : '7px',
-                backgroundColor: 'transparent', border: `1px solid ${CP.sidebarBorder}`,
-                color: CP.muted, fontSize: 10, letterSpacing: '0.12em',
-                cursor: 'pointer', transition: 'all 0.15s',
-              }}
+              className={cn(
+                "w-full flex items-center font-mono font-bold text-[11px] tracking-[0.1em] border-2 border-primary bg-background text-foreground hover:bg-primary hover:text-background transition-colors",
+                showFullSidebar ? "justify-start gap-2 py-2 px-3" : "justify-center py-2"
+              )}
             >
-              <Plus size={12} className="cp-new-icon shrink-0" style={{ color: CP.muted, transition: 'color 0.15s' }} />
+              <Plus size={14} className="shrink-0" />
               {showFullSidebar && <span>NEW CONVERSATION</span>}
             </button>
           </div>
 
           {/* Conversations grouped list */}
-          <div className="cp-scroll flex-1 overflow-y-auto overflow-x-hidden" style={{ padding: '4px 8px 16px' }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 mt-2 scrollbar-hide">
             {Object.entries(groupedConversations).map(([label, items]) => {
               if (items.length === 0) return null;
               return (
-                <div key={label} style={{ marginBottom: 16 }}>
+                <div key={label} className="mb-6">
                   {showFullSidebar && (
-                    <div
-                      className="cp-dm"
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '8px 8px 4px',
-                        fontSize: 8, letterSpacing: '0.22em', color: CP.muted,
-                      }}
-                    >
-                      <span style={{ flex: 1, height: '1px', backgroundColor: CP.sidebarBorder }} />
+                    <div className="flex items-center gap-2 px-2 py-1 mb-2 font-mono text-[10px] font-bold tracking-[0.2em] text-muted">
+                      <span className="flex-1 h-[2px] bg-border" />
                       {label}
-                      <span style={{ flex: 1, height: '1px', backgroundColor: CP.sidebarBorder }} />
+                      <span className="flex-1 h-[2px] bg-border" />
                     </div>
                   )}
                   <div>
@@ -325,22 +241,15 @@ export default function ChatPage() {
                               if (isMobile) toggleProjectSidebar();
                             }
                           }}
-                          className="cp-conv-item"
-                          style={{
-                            display: 'flex', alignItems: 'center',
-                            gap: showFullSidebar ? 8 : 0,
-                            justifyContent: showFullSidebar ? 'flex-start' : 'center',
-                            padding: showFullSidebar ? '6px 8px' : '8px',
-                            marginBottom: 1,
-                            backgroundColor: isActive ? CP.accentBg : 'transparent',
-                            borderLeft: isActive ? `2px solid ${CP.accent}` : '2px solid transparent',
-                            position: 'relative',
-                          }}
+                          className={cn(
+                            "group flex items-center mb-[2px] cursor-pointer transition-colors border-l-[3px]",
+                            showFullSidebar ? "gap-2 py-[6px] px-2 justify-start" : "py-[8px] justify-center",
+                            isActive ? "bg-muted border-primary" : "bg-transparent border-transparent hover:bg-muted/50"
+                          )}
                         >
-                          {/* Icon */}
                           <MessageSquare
-                            size={12}
-                            style={{ color: isActive ? CP.accent : CP.muted, flexShrink: 0 }}
+                            size={14}
+                            className={cn("shrink-0", isActive ? "text-primary" : "text-muted")}
                           />
 
                           {showFullSidebar && (
@@ -348,7 +257,7 @@ export default function ChatPage() {
                               {isEditing ? (
                                 <input
                                   ref={editInputRef}
-                                  className="cp-edit-input"
+                                  className="flex-1 min-w-0 bg-background border-2 border-primary font-mono text-[11px] px-1.5 py-0.5 outline-none text-foreground"
                                   value={editValue}
                                   onChange={e => setEditValue(e.target.value)}
                                   onKeyDown={e => {
@@ -358,38 +267,31 @@ export default function ChatPage() {
                                   onBlur={() => handleRename(conv.id)}
                                 />
                               ) : (
-                                <span
-                                  className="cp-dm"
-                                  style={{
-                                    fontSize: 11, flex: 1, minWidth: 0,
-                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                                    color: isActive ? CP.text : CP.muted,
-                                    letterSpacing: '0.01em',
-                                  }}
-                                >
+                                <span className={cn(
+                                  "font-sans font-bold text-[13px] flex-1 min-w-0 truncate tracking-tight",
+                                  isActive ? "text-foreground" : "text-foreground/70"
+                                )}>
                                   {title}
                                 </span>
                               )}
 
                               {!isEditing && (
-                                <div className="cp-conv-actions" style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                                <div className="opacity-0 group-hover:opacity-100 flex gap-1 shrink-0 transition-opacity">
                                   <button
-                                    className="cp-icon-btn cp-edit-btn"
-                                    style={{ padding: 3, color: CP.muted }}
+                                    className="p-1 text-muted hover:text-foreground transition-colors"
                                     onClick={e => {
                                       e.stopPropagation();
                                       setEditingId(conv.id);
                                       setEditValue(title);
                                     }}
                                   >
-                                    <Pencil size={10} />
+                                    <Pencil size={12} />
                                   </button>
                                   <button
-                                    className="cp-icon-btn cp-del-btn"
-                                    style={{ padding: 3, color: CP.muted }}
+                                    className="p-1 text-muted hover:text-destructive transition-colors"
                                     onClick={e => handleDelete(e, conv.id)}
                                   >
-                                    <Trash2 size={10} />
+                                    <Trash2 size={12} />
                                   </button>
                                 </div>
                               )}
@@ -401,10 +303,7 @@ export default function ChatPage() {
                       return sidebarCollapsed && !isMobile ? (
                         <Tooltip key={conv.id} delayDuration={0}>
                           <TooltipTrigger asChild>{content}</TooltipTrigger>
-                          <TooltipContent
-                            side="right"
-                            style={{ backgroundColor: '#1A1612', border: `1px solid ${CP.sidebarBorder}`, color: CP.text, fontSize: 11 }}
-                          >
+                          <TooltipContent side="right" className="bg-background border-2 border-primary text-foreground font-sans font-bold rounded-none text-[12px]">
                             {title}
                           </TooltipContent>
                         </Tooltip>
@@ -419,10 +318,10 @@ export default function ChatPage() {
 
             {/* Empty sidebar state */}
             {Object.values(groupedConversations).every(g => g.length === 0) && showFullSidebar && (
-              <div style={{ padding: '32px 8px', textAlign: 'center' }}>
-                <MessageSquare size={18} style={{ color: CP.muted, margin: '0 auto 10px' }} />
-                <p className="cp-dm" style={{ fontSize: 10, color: CP.muted, letterSpacing: '0.1em' }}>
-                  No conversations yet.
+              <div className="py-8 px-2 text-center">
+                <MessageSquare size={20} className="text-muted mx-auto mb-3" />
+                <p className="font-mono font-bold text-[11px] tracking-[0.1em] text-muted uppercase">
+                  No conversations
                 </p>
               </div>
             )}
@@ -430,39 +329,31 @@ export default function ChatPage() {
 
           {/* Sidebar footer — settings shortcut */}
           {showFullSidebar && (
-            <div style={{ borderTop: `1px solid ${CP.sidebarBorder}`, padding: '10px 10px' }}>
+            <div className="border-t-2 border-primary p-4 bg-muted/50 mt-auto">
               <button
-                className="cp-icon-btn cp-edit-btn"
-                style={{ width: '100%', padding: '6px 8px', gap: 8, justifyContent: 'flex-start', color: CP.muted, fontSize: 10 }}
+                className="w-full flex items-center justify-start gap-3 p-2 font-mono font-bold text-[11px] tracking-[0.1em] text-foreground hover:bg-muted transition-colors border-2 border-transparent hover:border-primary"
                 onClick={() => navigate(`/projects/${projectId}/settings`)}
               >
-                <Settings size={12} />
-                <span className="cp-dm" style={{ letterSpacing: '0.12em' }}>PROJECT SETTINGS</span>
+                <Settings size={14} />
+                <span>PROJECT SETTINGS</span>
               </button>
             </div>
           )}
         </aside>
 
         {/* MAIN CHAT AREA */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100%', position: 'relative', backgroundColor: CP.mainBg }}>
-
+        <div className="flex-1 flex flex-col min-w-0 h-full relative bg-background">
           {/* Sidebar toggle */}
           <button
-            className="cp-toggle"
+            className="absolute left-4 top-4 z-40 w-[36px] h-[36px] flex items-center justify-center bg-background border-2 border-primary text-foreground hover:bg-primary hover:text-background transition-colors"
             onClick={toggleProjectSidebar}
-            style={{
-              position: 'absolute', left: 14, top: 14, zIndex: 40,
-              width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backgroundColor: CP.sidebarBg, border: `1px solid ${CP.sidebarBorder}`,
-              color: CP.muted, cursor: 'pointer', transition: 'border-color 0.15s, color 0.15s',
-            }}
           >
-            {projectSidebarOpen ? <ChevronLeft size={13} /> : <Menu size={13} />}
+            {projectSidebarOpen ? <ChevronLeft size={16} /> : <Menu size={16} />}
           </button>
 
           {/* Chat messages */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100%' }}>
-            <div style={{ flex: 1, overflow: 'hidden', position: 'relative', width: '100%' }}>
+          <div className="flex-1 flex flex-col overflow-hidden w-full">
+            <div className="flex-1 overflow-hidden relative w-full pt-[48px] md:pt-0">
               {!currentConversation?.messages?.length && !isStreaming ? (
                 <ChatEmptyState
                   projectName={currentProject?.name || 'Project'}
@@ -478,13 +369,7 @@ export default function ChatPage() {
             </div>
 
             {/* Input wrapper */}
-            <div
-              style={{
-                width: '100%',
-                background: `linear-gradient(to top, ${CP.mainBg} 65%, transparent)`,
-                paddingBottom: 16, paddingTop: 28,
-              }}
-            >
+            <div className="w-full bg-gradient-to-t from-background via-background to-transparent pb-6 pt-8 z-10 px-4">
               <ChatInput
                 onSend={handleSendMessage}
                 onStop={() => setIsStreaming(false)}

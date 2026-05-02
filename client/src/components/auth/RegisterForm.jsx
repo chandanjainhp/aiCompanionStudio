@@ -7,19 +7,10 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Loader2, ArrowRight, User, Mail, Lock, Check, X } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
-
-const DB = {
-  bg: '#0E0C0A',
-  surface: '#161210',
-  border: '#252018',
-  borderBright: '#352C1C',
-  accent: '#E8961E',
-  accentDark: '#9A5E0A',
-  text: '#F0E8D8',
-  muted: '#7A6A54',
-  green: '#4ADE80',
-  red: '#FF5C5C',
-};
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const passwordRules = [
   { id: 'length',    label: 'AT LEAST 8 CHARACTERS', regex: /.{8,}/ },
@@ -65,56 +56,40 @@ export function RegisterForm() {
   const onSubmit = async data => {
     try {
       await sendRegistrationOTP(data.name, data.email, data.password);
-      toast({ title: 'OTP sent', description: 'Check your email for the verification code' });
+      toast({ title: 'OTP SENT', description: 'Check your email for the verification code' });
       navigate('/verify-otp', { state: { email: data.email, name: data.name, mode: 'register' } });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Something went wrong';
-      toast({ title: 'Registration failed', description: errorMsg, variant: 'destructive' });
+      toast({ title: 'REGISTRATION FAILED', description: errorMsg, variant: 'destructive' });
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: DB.bg, color: DB.text, display: 'flex' }}>
-      <style>{`
-        .reg-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-        .reg-input { background: ${DB.surface}; border: 1px solid ${DB.border}; color: ${DB.text}; outline: none; padding: 10px 12px; font-size: 12px; font-family: 'JetBrains Mono', monospace; width: 100%; }
-        .reg-input::placeholder { color: ${DB.muted}; }
-        .reg-input:focus { border-color: ${DB.accent}; }
-        .reg-input.error { border-color: ${DB.red}; }
-        .reg-btn { background: ${DB.accent}; color: #0E0C0A; border: none; padding: 10px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; cursor: pointer; transition: background 0.15s; font-family: 'JetBrains Mono', monospace; }
-        .reg-btn:hover:not(:disabled) { background: ${DB.accentDark}; }
-        .reg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .reg-checkbox { width: 14px; height: 14px; accent-color: ${DB.accent}; cursor: pointer; flex-shrink: 0; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
-
+    <div className="min-h-screen bg-background text-foreground flex">
       {/* Left sidebar */}
-      <div
-        style={{ flex: 1, backgroundColor: DB.surface, borderRight: `1px solid ${DB.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 40px', minWidth: 0 }}
-        className="hidden sm:flex"
-      >
+      <div className="flex-1 bg-muted/20 border-r-2 border-primary hidden sm:flex flex-col justify-center px-12 py-16 min-w-0">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
-          <div className="reg-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.3em', marginBottom: 24 }}>
+          <div className="font-mono text-[11px] uppercase tracking-[0.2em] font-bold opacity-60 mb-8 border-b-2 border-primary inline-block pb-1">
             NEW ACCOUNT
           </div>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 300, lineHeight: 1.1, marginBottom: 20, fontStyle: 'italic', fontFamily: 'Fraunces, Georgia, serif' }}>
-            Build your <span style={{ color: DB.accent }}>AI workspace</span>
+          <h2 className="font-display text-[48px] font-black leading-[1.1] mb-6 tracking-tight uppercase">
+            BUILD YOUR <br/><span className="text-muted-foreground">WORKSPACE</span>
           </h2>
-          <p style={{ fontSize: 13, color: DB.muted, lineHeight: 1.6, marginBottom: 32, maxWidth: 320 }}>
+          <p className="font-body text-[16px] leading-[1.6] mb-12 max-w-sm border-l-2 border-primary pl-4">
             Create an account to configure, deploy, and manage AI companions. Your workspace, your rules.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 32, borderTop: `1px solid ${DB.border}` }}>
+          <div className="flex flex-col gap-6 pt-8 border-t-2 border-primary">
             {[
               { label: 'UNLIMITED PROJECTS', desc: 'No cap on what you build' },
               { label: 'CUSTOM MODELS',       desc: 'GPT-4, Claude, Llama, and more' },
               { label: 'OTP VERIFIED',        desc: 'Secure email verification' },
             ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <div style={{ width: 5, height: 5, borderRadius: '50%', background: DB.accent, marginTop: 5, flexShrink: 0 }} />
+              <div key={i} className="flex items-start gap-4">
+                <div className="w-2 h-2 mt-1.5 rounded-none bg-primary flex-shrink-0" />
                 <div>
-                  <div className="reg-mono" style={{ fontSize: 9, color: DB.accent, letterSpacing: '0.15em', marginBottom: 2 }}>{item.label}</div>
-                  <div className="reg-mono" style={{ fontSize: 9, color: DB.muted }}>{item.desc}</div>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold mb-1">{item.label}</div>
+                  <div className="font-mono text-[10px] text-muted-foreground">{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -123,92 +98,90 @@ export function RegisterForm() {
       </div>
 
       {/* Right side — form */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', minWidth: 0, overflowY: 'auto' }}>
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 min-w-0 overflow-y-auto">
         <motion.form
           onSubmit={handleSubmit(onSubmit)}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          style={{ width: '100%', maxWidth: 380, paddingBlock: 20 }}
+          className="w-full max-w-[420px] py-8"
         >
-          <div className="reg-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.3em', marginBottom: 32 }}>
-            REGISTER
+          <div className="font-mono text-[11px] font-bold tracking-[0.2em] uppercase mb-8 pb-4 border-b-2 border-primary flex justify-between items-center">
+            <span>REGISTER</span>
+            <span className="text-[10px] bg-foreground text-background px-2 py-0.5">V_1.0</span>
           </div>
 
           {/* Name */}
-          <div style={{ marginBottom: 20 }}>
-            <label className="reg-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>
-              <User size={11} style={{ display: 'inline-block', marginRight: 6, verticalAlign: 'text-bottom' }} />
-              FULL NAME
-            </label>
-            <input
+          <div className="mb-6 space-y-2">
+            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
+              <User size={12} /> FULL NAME
+            </Label>
+            <Input
               type="text"
               placeholder="Jane Smith"
-              className="reg-input"
               {...register('name')}
-              style={{ borderColor: errors.name ? DB.red : DB.border }}
+              className={cn("border-2 border-primary rounded-none h-12 font-mono text-[12px] bg-background focus-visible:ring-0", errors.name && "border-destructive")}
             />
             {errors.name && (
-              <p className="reg-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6, letterSpacing: '0.05em' }}>
+              <p className="font-mono text-[10px] text-destructive uppercase tracking-[0.05em]">
                 {errors.name.message}
               </p>
             )}
           </div>
 
           {/* Email */}
-          <div style={{ marginBottom: 20 }}>
-            <label className="reg-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>
-              <Mail size={11} style={{ display: 'inline-block', marginRight: 6, verticalAlign: 'text-bottom' }} />
-              EMAIL ADDRESS
-            </label>
-            <input
+          <div className="mb-6 space-y-2">
+            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
+              <Mail size={12} /> EMAIL ADDRESS
+            </Label>
+            <Input
               type="email"
               placeholder="you@example.com"
-              className="reg-input"
               {...register('email')}
-              style={{ borderColor: errors.email ? DB.red : DB.border }}
+              className={cn("border-2 border-primary rounded-none h-12 font-mono text-[12px] bg-background focus-visible:ring-0", errors.email && "border-destructive")}
             />
             {errors.email && (
-              <p className="reg-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6, letterSpacing: '0.05em' }}>
+              <p className="font-mono text-[10px] text-destructive uppercase tracking-[0.05em]">
                 {errors.email.message}
               </p>
             )}
           </div>
 
           {/* Password */}
-          <div style={{ marginBottom: 20 }}>
-            <label className="reg-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>
-              <Lock size={11} style={{ display: 'inline-block', marginRight: 6, verticalAlign: 'text-bottom' }} />
-              PASSWORD
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
+          <div className="mb-6 space-y-2">
+            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
+              <Lock size={12} /> PASSWORD
+            </Label>
+            <div className="relative">
+              <Input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••••"
-                className="reg-input"
                 {...register('password')}
-                style={{ borderColor: errors.password ? DB.red : DB.border, paddingRight: 36 }}
+                className={cn("border-2 border-primary rounded-none h-12 font-mono text-[12px] bg-background focus-visible:ring-0 pr-10", errors.password && "border-destructive")}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: DB.muted, display: 'flex', alignItems: 'center' }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
 
             {/* Password strength */}
-            <div style={{ marginTop: 10, padding: '10px 12px', background: DB.surface, border: `1px solid ${DB.border}`, display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div className="mt-4 p-4 bg-muted/20 border-2 border-primary flex flex-col gap-2">
               {passwordRules.map(rule => {
                 const ok = rule.regex.test(watchedPassword);
                 return (
-                  <div key={rule.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div key={rule.id} className="flex items-center gap-3">
                     {ok
-                      ? <Check size={10} style={{ color: DB.green, flexShrink: 0 }} />
-                      : <X size={10} style={{ color: DB.muted, flexShrink: 0 }} />
+                      ? <Check size={12} className="text-primary flex-shrink-0" />
+                      : <X size={12} className="text-muted-foreground flex-shrink-0" />
                     }
-                    <span className="reg-mono" style={{ fontSize: 9, color: ok ? DB.green : DB.muted, letterSpacing: '0.05em' }}>
+                    <span className={cn(
+                      "font-mono text-[10px] tracking-[0.05em]",
+                      ok ? "text-primary font-bold" : "text-muted-foreground"
+                    )}>
                       {rule.label}
                     </span>
                   </div>
@@ -218,57 +191,57 @@ export function RegisterForm() {
           </div>
 
           {/* Confirm Password */}
-          <div style={{ marginBottom: 20 }}>
-            <label className="reg-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>
-              <Lock size={11} style={{ display: 'inline-block', marginRight: 6, verticalAlign: 'text-bottom' }} />
-              CONFIRM PASSWORD
-            </label>
-            <div style={{ position: 'relative' }}>
-              <input
+          <div className="mb-6 space-y-2">
+            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
+              <Lock size={12} /> CONFIRM PASSWORD
+            </Label>
+            <div className="relative">
+              <Input
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="••••••••••"
-                className="reg-input"
                 {...register('confirmPassword')}
-                style={{ borderColor: errors.confirmPassword ? DB.red : DB.border, paddingRight: 36 }}
+                className={cn("border-2 border-primary rounded-none h-12 font-mono text-[12px] bg-background focus-visible:ring-0 pr-10", errors.confirmPassword && "border-destructive")}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: DB.muted, display: 'flex', alignItems: 'center' }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {errors.confirmPassword && (
-              <p className="reg-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6, letterSpacing: '0.05em' }}>
+              <p className="font-mono text-[10px] text-destructive uppercase tracking-[0.05em]">
                 {errors.confirmPassword.message}
               </p>
             )}
           </div>
 
           {/* Terms */}
-          <div style={{ marginBottom: 28, paddingBottom: 16, borderBottom: `1px solid ${DB.border}` }}>
+          <div className="mb-8 pb-6 border-b-2 border-primary">
             <Controller
               name="acceptTerms"
               control={control}
               render={({ field }) => (
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    className="reg-checkbox"
-                    checked={!!field.value}
-                    onChange={e => field.onChange(e.target.checked)}
-                    style={{ marginTop: 1 }}
-                  />
-                  <span className="reg-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.05em', lineHeight: 1.6 }}>
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <div className="mt-0.5 relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      className="peer sr-only"
+                      checked={!!field.value}
+                      onChange={e => field.onChange(e.target.checked)}
+                    />
+                    <div className="w-4 h-4 border-2 border-primary bg-background peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-primary transition-colors flex items-center justify-center">
+                      {field.value && <Check size={12} className="text-background" />}
+                    </div>
+                  </div>
+                  <span className="font-mono text-[10px] text-muted-foreground tracking-[0.05em] leading-relaxed mt-0.5">
                     I AGREE TO THE{' '}
                     <Link
                       to="/terms"
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: DB.accent, textDecoration: 'none' }}
-                      onMouseEnter={e => (e.target.style.opacity = '0.7')}
-                      onMouseLeave={e => (e.target.style.opacity = '1')}
+                      className="text-foreground font-bold underline hover:no-underline"
                     >
                       TERMS &amp; PRIVACY POLICY
                     </Link>
@@ -277,49 +250,39 @@ export function RegisterForm() {
               )}
             />
             {errors.acceptTerms && (
-              <p className="reg-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6, letterSpacing: '0.05em' }}>
+              <p className="font-mono text-[10px] text-destructive uppercase tracking-[0.05em] mt-2">
                 {errors.acceptTerms.message}
               </p>
             )}
           </div>
 
           {/* Submit */}
-          <button
+          <Button
             type="submit"
-            className="reg-btn"
             disabled={isLoading || !watchedTerms}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 20 }}
+            className="w-full h-14 border-2 border-primary bg-primary text-background hover:bg-foreground hover:text-background rounded-none font-mono text-[12px] font-bold tracking-[0.15em] uppercase transition-colors flex items-center justify-center gap-3 mb-8"
           >
             {isLoading ? (
               <>
-                <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                <Loader2 size={16} className="animate-spin" />
                 <span>CREATING ACCOUNT...</span>
               </>
             ) : (
               <>
                 <span>CREATE ACCOUNT</span>
-                <ArrowRight size={11} />
+                <ArrowRight size={16} />
               </>
             )}
-          </button>
+          </Button>
 
           {/* Sign in link */}
-          <p className="reg-mono" style={{ fontSize: 10, color: DB.muted, textAlign: 'center', letterSpacing: '0.05em', lineHeight: 1.6 }}>
-            Already have an account?{' '}
-            <Link
-              to="/login"
-              style={{ color: DB.accent, textDecoration: 'none', transition: 'opacity 0.15s' }}
-              onMouseEnter={e => (e.target.style.opacity = '0.7')}
-              onMouseLeave={e => (e.target.style.opacity = '1')}
-            >
-              SIGN IN
-            </Link>
-          </p>
-
-          {/* Status */}
-          <div style={{ marginTop: 32, paddingTop: 20, borderTop: `1px solid ${DB.border}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className="reg-mono" style={{ fontSize: 8, color: DB.green, letterSpacing: '0.1em' }}>● READY</span>
-            <span className="reg-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.1em' }}>v1.0</span>
+          <div className="pt-6 border-t-2 border-primary text-center">
+            <p className="font-mono text-[11px] uppercase tracking-[0.05em]">
+              ALREADY HAVE AN ACCOUNT?{' '}
+              <Link to="/login" className="font-bold underline hover:no-underline ml-2">
+                SIGN IN
+              </Link>
+            </p>
           </div>
         </motion.form>
       </div>

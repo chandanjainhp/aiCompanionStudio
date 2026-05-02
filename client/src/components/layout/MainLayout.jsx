@@ -8,10 +8,12 @@ export function MainLayout() {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  return <div className="dark min-h-screen w-full" style={{ backgroundColor: '#0E0C0A' }}>
+  return (
+    <div className="min-h-screen w-full bg-background text-foreground">
       <AppTopbar />
-      <main style={{ paddingTop: 56 }}>
+      <main className="pt-[64px]">
         <Outlet />
       </main>
-    </div>;
+    </div>
+  );
 }

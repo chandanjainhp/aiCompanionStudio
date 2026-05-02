@@ -4,20 +4,8 @@ import { motion } from 'framer-motion';
 import { Loader2, ArrowLeft, UserCheck, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
-
-const DB = {
-  bg: '#0E0C0A',
-  surface: '#161210',
-  border: '#252018',
-  borderBright: '#352C1C',
-  accent: '#E8961E',
-  accentDark: '#9A5E0A',
-  text: '#F0E8D8',
-  muted: '#7A6A54',
-  green: '#4ADE80',
-  red: '#FF5C5C',
-  orange: '#F97316',
-};
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export function VerifyRegistration() {
   const navigate = useNavigate();
@@ -61,23 +49,23 @@ export function VerifyRegistration() {
   const handleVerify = async e => {
     e.preventDefault();
     if (otp.length !== 6) {
-      toast({ title: 'Invalid OTP', description: 'Enter a 6-digit code', variant: 'destructive' });
+      toast({ title: 'INVALID OTP', description: 'Enter a 6-digit code', variant: 'destructive' });
       return;
     }
     if (attempts >= 3) {
-      toast({ title: 'Too many attempts', description: 'Please request a new OTP', variant: 'destructive' });
+      toast({ title: 'TOO MANY ATTEMPTS', description: 'Please request a new OTP', variant: 'destructive' });
       return;
     }
     try {
       await verifyRegistrationOTP(email, otp);
-      toast({ title: 'Account created', description: 'Welcome!' });
+      toast({ title: 'ACCOUNT CREATED', description: 'Welcome!' });
       clearRegistrationState();
       navigate('/dashboard');
     } catch {
       const count = attempts + 1;
       setAttempts(count);
       setOtp('');
-      toast({ title: 'Incorrect OTP', description: `Attempt ${count} of 3`, variant: 'destructive' });
+      toast({ title: 'INCORRECT OTP', description: `Attempt ${count} of 3`, variant: 'destructive' });
       if (count >= 3) setTimer(0);
     }
   };
@@ -90,21 +78,21 @@ export function VerifyRegistration() {
       setTimer(900);
       setAttempts(0);
       setResendCooldown(30);
-      toast({ title: 'OTP Sent', description: 'Check your email for the new code' });
+      toast({ title: 'OTP SENT', description: 'Check your email for the new code' });
     } catch (err) {
-      toast({ title: 'Failed', description: err instanceof Error ? err.message : 'Could not resend OTP', variant: 'destructive' });
+      toast({ title: 'FAILED', description: err instanceof Error ? err.message : 'Could not resend OTP', variant: 'destructive' });
     }
   };
 
   const mins       = Math.floor(timer / 60);
   const secs       = String(timer % 60).padStart(2, '0');
-  const timerColor = timer > 180 ? DB.green : timer > 60 ? DB.orange : DB.red;
+  const timerColor = timer > 180 ? 'text-primary' : timer > 60 ? 'text-orange-500' : 'text-destructive';
 
   if (!_isHydrated) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: DB.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div animate={{ opacity: [1, 0.25, 1] }} transition={{ duration: 1.4, repeat: Infinity }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: DB.accent }} />
+          <div className="w-4 h-4 bg-primary" />
         </motion.div>
       </div>
     );
@@ -112,8 +100,8 @@ export function VerifyRegistration() {
 
   if (!email || !name || !registerOtpSent) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: DB.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: DB.muted, letterSpacing: '0.15em' }}>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="font-mono text-[10px] text-muted-foreground tracking-[0.15em] uppercase">
           REDIRECTING...
         </p>
       </div>
@@ -121,51 +109,39 @@ export function VerifyRegistration() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: DB.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <style>{`
-        .vr-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-        .vr-otp-input { background: ${DB.surface}; border: 1px solid ${DB.borderBright}; color: ${DB.accent}; outline: none; padding: 16px 12px; font-size: 28px; font-family: 'JetBrains Mono', monospace; width: 100%; text-align: center; letter-spacing: 0.35em; transition: border-color 0.15s; }
-        .vr-otp-input:focus { border-color: ${DB.accent}; box-shadow: 0 0 0 1px ${DB.accent}40; }
-        .vr-otp-input:disabled { opacity: 0.4; cursor: not-allowed; }
-        .vr-btn { background: ${DB.accent}; color: #0E0C0A; border: none; padding: 12px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; cursor: pointer; transition: background 0.15s; font-family: 'JetBrains Mono', monospace; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .vr-btn:hover:not(:disabled) { background: ${DB.accentDark}; }
-        .vr-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .vr-resend { background: transparent; border: 1px solid ${DB.border}; color: ${DB.muted}; padding: 9px 20px; font-size: 10px; letter-spacing: 0.12em; cursor: pointer; transition: all 0.15s; font-family: 'JetBrains Mono', monospace; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .vr-resend:not(:disabled):hover { border-color: ${DB.accent}; color: ${DB.accent}; }
-        .vr-resend:disabled { opacity: 0.35; cursor: not-allowed; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
-
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        style={{ width: '100%', maxWidth: 400 }}
+        className="w-full max-w-[420px]"
       >
-        <div style={{ marginBottom: 36 }}>
-          <div className="vr-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.3em', marginBottom: 20 }}>
+        <div className="mb-10 text-center">
+          <div className="font-mono text-[11px] uppercase tracking-[0.2em] font-bold opacity-60 mb-6 border-b-2 border-primary inline-block pb-1">
             ACCOUNT VERIFICATION
           </div>
-          <div style={{ width: 40, height: 40, background: DB.surface, border: `1px solid ${DB.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-            <UserCheck size={18} style={{ color: DB.accent }} />
+          <div className="w-12 h-12 bg-background border-2 border-primary flex items-center justify-center mx-auto mb-6">
+            <UserCheck size={20} className="text-primary" />
           </div>
-          <h1 style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 32, fontWeight: 300, fontStyle: 'italic', lineHeight: 1.1, color: DB.text, marginBottom: 10 }}>
-            Verify your <span style={{ color: DB.accent }}>email</span>
+          <h1 className="font-display text-[32px] font-black leading-[1.1] mb-4 tracking-tight uppercase">
+            VERIFY YOUR <br/><span className="text-muted-foreground">EMAIL</span>
           </h1>
-          <p className="vr-mono" style={{ fontSize: 11, color: DB.muted, lineHeight: 1.7 }}>
-            A 6-digit code was sent to{' '}
-            <span style={{ color: DB.text }}>{email}</span>
+          <p className="font-body text-[14px] leading-[1.6] opacity-80 max-w-[320px] mx-auto border-l-2 border-primary pl-4 text-left">
+            A 6-digit code was sent to <span className="font-bold text-foreground">{email}</span>
           </p>
         </div>
 
         <form onSubmit={handleVerify}>
-          <div style={{ background: DB.surface, border: `1px solid ${DB.border}`, padding: 28, marginBottom: 2 }}>
-            <div style={{ marginBottom: 20 }}>
-              <label className="vr-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 10 }}>
+          <div className="bg-muted/20 border-2 border-primary p-6 sm:p-8">
+            <div className="mb-6 space-y-2">
+              <label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold text-center block mb-2">
                 6-DIGIT CODE
               </label>
               <input
-                className="vr-otp-input"
+                className={cn(
+                  "w-full h-16 bg-background border-2 border-primary outline-none text-center font-mono text-[28px] tracking-[0.35em] transition-colors focus:border-foreground disabled:opacity-50 disabled:cursor-not-allowed",
+                  (timer === 0 || attempts >= 3) && "border-destructive text-destructive"
+                )}
                 value={otp}
                 onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 inputMode="numeric"
@@ -176,48 +152,64 @@ export function VerifyRegistration() {
               />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, padding: '8px 0', borderTop: `1px solid ${DB.border}`, borderBottom: `1px solid ${DB.border}` }}>
+            <div className="flex justify-between items-center py-4 border-y-2 border-primary mb-8">
               <div>
-                <div className="vr-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.15em', marginBottom: 3 }}>EXPIRES IN</div>
-                <div className="vr-mono" style={{ fontSize: 18, fontWeight: 600, color: timerColor }}>
+                <div className="font-mono text-[10px] uppercase tracking-[0.1em] font-bold opacity-60 mb-1">EXPIRES IN</div>
+                <div className={cn("font-mono text-[18px] font-bold tracking-[0.05em]", timerColor)}>
                   {timer > 0 ? `${mins}:${secs}` : 'EXPIRED'}
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div className="vr-mono" style={{ fontSize: 8, color: DB.muted, letterSpacing: '0.15em', marginBottom: 3 }}>ATTEMPTS</div>
-                <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+              <div className="text-right">
+                <div className="font-mono text-[10px] uppercase tracking-[0.1em] font-bold opacity-60 mb-2">ATTEMPTS</div>
+                <div className="flex gap-1.5 justify-end">
                   {[0, 1, 2].map(i => (
-                    <div key={i} style={{ width: 10, height: 10, background: i < attempts ? DB.red : DB.border, border: `1px solid ${i < attempts ? DB.red : DB.borderBright}` }} />
+                    <div
+                      key={i}
+                      className={cn(
+                        "w-2.5 h-2.5 border-2",
+                        i < attempts ? "bg-destructive border-destructive" : "border-primary bg-background"
+                      )}
+                    />
                   ))}
                 </div>
               </div>
             </div>
 
-            <button type="submit" className="vr-btn" disabled={isLoading || otp.length !== 6 || timer === 0 || attempts >= 3}>
-              {isLoading
-                ? <><Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />VERIFYING...</>
-                : <>CREATE ACCOUNT</>
-              }
-            </button>
+            <Button
+              type="submit"
+              disabled={isLoading || otp.length !== 6 || timer === 0 || attempts >= 3}
+              className="w-full h-14 border-2 border-primary bg-primary text-background hover:bg-foreground hover:text-background rounded-none font-mono text-[12px] font-bold tracking-[0.15em] uppercase transition-colors flex items-center justify-center gap-3"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>VERIFYING...</span>
+                </>
+              ) : (
+                <span>CREATE ACCOUNT</span>
+              )}
+            </Button>
           </div>
 
-          <div style={{ background: DB.surface, border: `1px solid ${DB.border}`, padding: '14px 28px' }}>
-            <button type="button" className="vr-resend" disabled={resendCooldown > 0 || isLoading} onClick={handleResend}>
-              <RefreshCw size={10} />
+          <div className="mt-4 border-2 border-primary">
+            <button
+              type="button"
+              className="w-full py-4 font-mono text-[11px] font-bold tracking-[0.1em] uppercase bg-background hover:bg-muted/20 disabled:opacity-50 disabled:hover:bg-background transition-colors flex items-center justify-center gap-2"
+              disabled={resendCooldown > 0 || isLoading}
+              onClick={handleResend}
+            >
+              <RefreshCw size={12} className={cn(isLoading && "animate-spin")} />
               {resendCooldown > 0 ? `RESEND IN ${resendCooldown}s` : 'RESEND CODE'}
             </button>
           </div>
         </form>
 
-        <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${DB.border}` }}>
+        <div className="mt-8 pt-6 border-t-2 border-primary text-center">
           <Link
             to="/register"
-            className="vr-mono"
-            style={{ fontSize: 10, color: DB.muted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, letterSpacing: '0.1em', transition: 'color 0.15s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = DB.accent)}
-            onMouseLeave={e => (e.currentTarget.style.color = DB.muted)}
+            className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] underline hover:no-underline inline-flex items-center gap-2"
           >
-            <ArrowLeft size={11} />
+            <ArrowLeft size={12} />
             BACK TO REGISTER
           </Link>
         </div>

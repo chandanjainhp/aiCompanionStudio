@@ -1,15 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-
-const DB = {
-  bg: '#0E0C0A',
-  surface: '#161210',
-  border: '#252018',
-  accent: '#E8961E',
-  text: '#F0E8D8',
-  muted: '#7A6A54',
-};
+import { cn } from '@/lib/utils';
 
 const sections = [
   {
@@ -46,116 +38,90 @@ const sections = [
 
 export default function TermsOfService() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: DB.bg, color: DB.text }}>
-      <style>{`
-        .tos-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-      `}</style>
-
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 40, borderBottom: `1px solid ${DB.border}`, background: `${DB.bg}ee`, backdropFilter: 'blur(12px)' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, height: 56 }}>
-            <Link
-              to="/register"
-              className="tos-mono"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, color: DB.muted, textDecoration: 'none', letterSpacing: '0.1em', transition: 'color 0.15s', border: `1px solid ${DB.border}`, padding: '6px 12px' }}
-              onMouseEnter={e => (e.currentTarget.style.color = DB.accent)}
-              onMouseLeave={e => (e.currentTarget.style.color = DB.muted)}
-            >
-              <ArrowLeft size={11} />
-              BACK
-            </Link>
-            <div className="tos-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.2em' }}>
-              TERMS &amp; PRIVACY POLICY
-            </div>
+      <header className="sticky top-0 z-40 border-b-2 border-primary bg-background/90 backdrop-blur-md">
+        <div className="max-w-[800px] mx-auto px-6 h-16 flex items-center gap-4">
+          <Link
+            to="/register"
+            className="h-8 px-3 border-2 border-primary flex items-center justify-center hover:bg-muted/20 transition-colors font-mono text-[10px] font-bold tracking-[0.1em] uppercase gap-2"
+          >
+            <ArrowLeft size={12} />
+            BACK
+          </Link>
+          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
+            TERMS &amp; PRIVACY POLICY
           </div>
         </div>
       </header>
 
       {/* Content */}
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '48px 24px 80px' }}>
-
+      <div className="max-w-[800px] mx-auto px-6 pt-12 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           {/* Title */}
-          <div style={{ marginBottom: 48, paddingBottom: 32, borderBottom: `1px solid ${DB.border}` }}>
-            <div className="tos-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.3em', marginBottom: 16 }}>
+          <div className="mb-12 pb-8 border-b-2 border-primary">
+            <div className="font-mono text-[11px] uppercase tracking-[0.3em] font-bold opacity-60 mb-6">
               LEGAL DOCUMENT
             </div>
-            <h1
-              style={{
-                fontFamily: 'Fraunces, Georgia, serif',
-                fontSize: 'clamp(36px, 6vw, 56px)',
-                fontWeight: 300,
-                fontStyle: 'italic',
-                lineHeight: 1.05,
-                marginBottom: 16,
-                color: DB.text,
-              }}
-            >
-              Terms &amp; <span style={{ color: DB.accent }}>Privacy Policy</span>
+            <h1 className="font-display text-[48px] sm:text-[64px] font-black leading-[1.05] mb-4 tracking-tight uppercase">
+              TERMS &amp; <br/><span className="text-muted-foreground">PRIVACY POLICY</span>
             </h1>
-            <div className="tos-mono" style={{ fontSize: 10, color: DB.muted, letterSpacing: '0.05em' }}>
+            <div className="font-mono text-[11px] text-muted-foreground tracking-[0.05em] uppercase">
               Last updated: January 2026
             </div>
           </div>
 
           {/* Sections */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div className="flex flex-col gap-8">
             {sections.map((s, i) => (
               <motion.div
                 key={s.num}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 + i * 0.06 }}
-                style={{ background: DB.surface, border: `1px solid ${DB.border}`, padding: '24px 28px' }}
+                className="bg-muted/20 border-2 border-primary p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:gap-10 items-start"
               >
-                <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-                  <div
-                    className="tos-mono"
-                    style={{ fontSize: 28, fontWeight: 700, color: DB.border, lineHeight: 1, flexShrink: 0, minWidth: 40, userSelect: 'none' }}
-                  >
-                    {s.num}
+                <div className="font-display text-[32px] sm:text-[40px] font-black leading-none text-primary flex-shrink-0 select-none">
+                  {s.num}
+                </div>
+                <div className="flex-1">
+                  <div className="font-mono text-[13px] font-bold tracking-[0.1em] uppercase mb-4 text-foreground">
+                    {s.title}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div className="tos-mono" style={{ fontSize: 11, color: DB.accent, letterSpacing: '0.1em', marginBottom: 12, fontWeight: 600 }}>
-                      {s.title.toUpperCase()}
-                    </div>
-                    {s.list ? (
-                      <>
-                        <p style={{ fontSize: 13, color: DB.muted, lineHeight: 1.75, marginBottom: 12 }}>
-                          We prioritize your data privacy. When using our OpenRoute API integration:
-                        </p>
-                        <ul style={{ paddingLeft: 0, margin: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                          {s.list.map((item, j) => (
-                            <li key={j} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                              <span style={{ color: DB.accent, flexShrink: 0, marginTop: 2 }}>→</span>
-                              <span style={{ fontSize: 13, color: DB.muted, lineHeight: 1.65 }}>{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </>
-                    ) : (
-                      <p style={{ fontSize: 13, color: DB.muted, lineHeight: 1.75 }}>{s.body}</p>
-                    )}
-                  </div>
+                  {s.list ? (
+                    <>
+                      <p className="font-body text-[14px] text-muted-foreground leading-relaxed mb-4">
+                        We prioritize your data privacy. When using our OpenRoute API integration:
+                      </p>
+                      <ul className="flex flex-col gap-3">
+                        {s.list.map((item, j) => (
+                          <li key={j} className="flex gap-3 items-start">
+                            <span className="text-primary font-bold mt-0.5">→</span>
+                            <span className="font-body text-[14px] text-muted-foreground leading-relaxed">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <p className="font-body text-[14px] text-muted-foreground leading-relaxed">{s.body}</p>
+                  )}
                 </div>
               </motion.div>
             ))}
           </div>
 
           {/* Footer note */}
-          <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${DB.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-            <span className="tos-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.1em' }}>
+          <div className="mt-12 pt-8 border-t-2 border-primary flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <span className="font-mono text-[10px] text-muted-foreground tracking-[0.1em] uppercase font-bold">
               AI COMPANION STUDIO · MIT LICENSE
             </span>
             <Link
               to="/register"
-              className="tos-mono"
-              style={{ fontSize: 10, color: DB.accent, textDecoration: 'none', letterSpacing: '0.1em' }}
+              className="font-mono text-[11px] font-bold text-foreground hover:text-primary tracking-[0.1em] uppercase underline hover:no-underline transition-colors"
             >
               BACK TO REGISTER →
             </Link>

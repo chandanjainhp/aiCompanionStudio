@@ -1,16 +1,7 @@
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import { SettingsLayout } from './SettingsLayout';
-
-const DB = {
-  surface: '#161210',
-  border: '#252018',
-  borderBright: '#352C1C',
-  accent: '#E8961E',
-  accentFaint: 'rgba(232,150,30,0.08)',
-  text: '#F0E8D8',
-  muted: '#7A6A54',
-};
+import { cn } from '@/lib/utils';
 
 const themes = [
   { value: 'light',  label: 'LIGHT',  Icon: Sun,     desc: 'Bright workspace' },
@@ -23,48 +14,48 @@ export default function PreferencesPage() {
 
   return (
     <SettingsLayout activeTab="preferences">
-      <style>{`
-        .pref-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-        .pref-theme-card { background: #0E0C0A; border: 1px solid ${DB.border}; padding: 20px 16px; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .pref-theme-card:hover { border-color: ${DB.accent}; background: ${DB.accentFaint}; }
-        .pref-theme-card.active { border-color: ${DB.accent}; background: ${DB.accentFaint}; }
-      `}</style>
-
-      <div style={{ background: DB.surface, border: `1px solid ${DB.border}`, padding: 28 }}>
-        <div className="pref-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.25em', marginBottom: 24 }}>
+      <div className="bg-muted/20 border-2 border-primary p-6 sm:p-8">
+        <div className="font-mono text-[11px] text-muted-foreground tracking-[0.25em] uppercase mb-8 font-bold">
           APPEARANCE
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {themes.map(({ value, label, Icon, desc }) => {
             const isActive = theme === value;
             return (
               <button
                 key={value}
-                className={`pref-theme-card${isActive ? ' active' : ''}`}
+                className={cn(
+                  "flex flex-col items-center gap-3 p-6 border-2 transition-all cursor-pointer text-center outline-none focus-visible:ring-2 focus-visible:ring-foreground",
+                  isActive 
+                    ? "border-primary bg-primary/10" 
+                    : "border-primary/20 bg-background hover:border-primary hover:bg-muted/10"
+                )}
                 onClick={() => setTheme(value)}
               >
                 <div
-                  style={{
-                    width: 36, height: 36,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: isActive ? DB.accent : DB.borderBright,
-                    transition: 'background 0.15s',
-                  }}
+                  className={cn(
+                    "w-10 h-10 flex items-center justify-center transition-colors",
+                    isActive ? "bg-primary text-background" : "bg-muted/20 text-muted-foreground"
+                  )}
                 >
-                  <Icon size={16} style={{ color: isActive ? '#0E0C0A' : DB.muted }} />
+                  <Icon size={18} />
                 </div>
                 <div>
-                  <div className="pref-mono" style={{ fontSize: 9, color: isActive ? DB.accent : DB.muted, letterSpacing: '0.15em', marginBottom: 3 }}>
+                  <div className={cn(
+                    "font-mono text-[11px] font-bold tracking-[0.15em] uppercase mb-1",
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  )}>
                     {label}
                   </div>
-                  <div className="pref-mono" style={{ fontSize: 8, color: DB.muted }}>
+                  <div className="font-mono text-[9px] text-muted-foreground uppercase tracking-[0.05em]">
                     {desc}
                   </div>
                 </div>
                 {isActive && (
-                  <div className="pref-mono" style={{ fontSize: 7, color: DB.accent, letterSpacing: '0.1em' }}>
-                    ● ACTIVE
+                  <div className="font-mono text-[9px] font-bold text-primary tracking-[0.1em] mt-2 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    ACTIVE
                   </div>
                 )}
               </button>

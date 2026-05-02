@@ -6,16 +6,10 @@ import { Eye, EyeOff, Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/api';
 import { SettingsLayout } from './SettingsLayout';
-
-const DB = {
-  surface: '#161210',
-  border: '#252018',
-  accent: '#E8961E',
-  accentDark: '#9A5E0A',
-  text: '#F0E8D8',
-  muted: '#7A6A54',
-  red: '#FF5C5C',
-};
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const passwordSchema = z
   .object({
@@ -56,99 +50,102 @@ export default function SecurityPage() {
     }
   };
 
+  const inputClassName = (hasError) => cn(
+    "font-mono text-[14px] border-2 rounded-none p-3 w-full bg-background text-foreground outline-none box-border transition-colors focus-visible:ring-0 h-[48px]",
+    hasError ? "border-destructive focus-visible:border-destructive" : "border-primary focus-visible:border-foreground"
+  );
+
   return (
     <SettingsLayout activeTab="security">
-      <style>{`
-        .sec-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-        .sec-input { background: #0E0C0A; border: 1px solid ${DB.border}; color: ${DB.text}; outline: none; padding: 10px 12px; font-size: 12px; font-family: 'JetBrains Mono', monospace; width: 100%; transition: border-color 0.15s; }
-        .sec-input::placeholder { color: ${DB.muted}; }
-        .sec-input:focus { border-color: ${DB.accent}; }
-        .sec-input.error { border-color: ${DB.red}; }
-        .sec-btn { background: ${DB.accent}; color: #0E0C0A; border: none; padding: 10px 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; cursor: pointer; transition: background 0.15s; font-family: 'JetBrains Mono', monospace; display: inline-flex; align-items: center; gap: 6px; }
-        .sec-btn:hover:not(:disabled) { background: ${DB.accentDark}; }
-        .sec-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
-
-      <div style={{ background: DB.surface, border: `1px solid ${DB.border}`, padding: 28 }}>
-        <div className="sec-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.25em', marginBottom: 24 }}>
+      <div className="bg-muted/20 border-2 border-primary p-6 sm:p-8">
+        <div className="font-mono text-[11px] text-muted-foreground tracking-[0.25em] uppercase mb-8 font-bold">
           CHANGE PASSWORD
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="flex flex-col gap-6">
 
             {/* Current password */}
             <div>
-              <label className="sec-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>
+              <Label className="font-mono text-[10px] text-muted-foreground tracking-[0.15em] uppercase block mb-3 font-bold" htmlFor="currentPassword">
                 CURRENT PASSWORD
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input
+              </Label>
+              <div className="relative">
+                <Input
                   id="currentPassword"
                   type={showCurrent ? 'text' : 'password'}
                   placeholder="Enter your current password"
-                  className={`sec-input${errors.currentPassword ? ' error' : ''}`}
+                  className={cn(inputClassName(!!errors.currentPassword), "pr-12")}
                   {...register('currentPassword')}
-                  style={{ paddingRight: 36 }}
                 />
-                <button type="button" onClick={() => setShowCurrent(!showCurrent)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: DB.muted }}>
-                  {showCurrent ? <EyeOff size={14} /> : <Eye size={14} />}
+                <button 
+                  type="button" 
+                  onClick={() => setShowCurrent(!showCurrent)} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.currentPassword && (
-                <p className="sec-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6 }}>{errors.currentPassword.message}</p>
+                <p className="font-mono text-[10px] text-destructive tracking-[0.05em] uppercase mt-2 font-bold">{errors.currentPassword.message}</p>
               )}
             </div>
 
             {/* New password */}
             <div>
-              <label className="sec-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>
+              <Label className="font-mono text-[10px] text-muted-foreground tracking-[0.15em] uppercase block mb-3 font-bold" htmlFor="newPassword">
                 NEW PASSWORD
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input
+              </Label>
+              <div className="relative">
+                <Input
                   id="newPassword"
                   type={showNew ? 'text' : 'password'}
                   placeholder="Min 8 characters"
-                  className={`sec-input${errors.newPassword ? ' error' : ''}`}
+                  className={cn(inputClassName(!!errors.newPassword), "pr-12")}
                   {...register('newPassword')}
-                  style={{ paddingRight: 36 }}
                 />
-                <button type="button" onClick={() => setShowNew(!showNew)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: DB.muted }}>
-                  {showNew ? <EyeOff size={14} /> : <Eye size={14} />}
+                <button 
+                  type="button" 
+                  onClick={() => setShowNew(!showNew)} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.newPassword && (
-                <p className="sec-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6 }}>{errors.newPassword.message}</p>
+                <p className="font-mono text-[10px] text-destructive tracking-[0.05em] uppercase mt-2 font-bold">{errors.newPassword.message}</p>
               )}
             </div>
 
             {/* Confirm */}
             <div>
-              <label className="sec-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.15em', display: 'block', marginBottom: 8 }}>
+              <Label className="font-mono text-[10px] text-muted-foreground tracking-[0.15em] uppercase block mb-3 font-bold" htmlFor="confirmPassword">
                 CONFIRM NEW PASSWORD
-              </label>
-              <input
+              </Label>
+              <Input
                 id="confirmPassword"
                 type="password"
                 placeholder="Repeat new password"
-                className={`sec-input${errors.confirmPassword ? ' error' : ''}`}
+                className={inputClassName(!!errors.confirmPassword)}
                 {...register('confirmPassword')}
               />
               {errors.confirmPassword && (
-                <p className="sec-mono" style={{ fontSize: 9, color: DB.red, marginTop: 6 }}>{errors.confirmPassword.message}</p>
+                <p className="font-mono text-[10px] text-destructive tracking-[0.05em] uppercase mt-2 font-bold">{errors.confirmPassword.message}</p>
               )}
             </div>
           </div>
 
-          <div style={{ marginTop: 28, display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="submit" className="sec-btn" disabled={isUpdating}>
+          <div className="mt-8 flex justify-end">
+            <Button 
+              type="submit" 
+              disabled={isUpdating}
+              className="rounded-none border-2 border-primary bg-primary text-background hover:bg-foreground font-mono text-[11px] font-bold tracking-[0.1em] uppercase gap-2 h-10 px-6"
+            >
               {isUpdating
-                ? <><Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />UPDATING...</>
-                : <><Save size={12} />UPDATE PASSWORD</>
+                ? <><Loader2 size={14} className="animate-spin" />UPDATING...</>
+                : <><Save size={14} />UPDATE PASSWORD</>
               }
-            </button>
+            </Button>
           </div>
         </form>
       </div>

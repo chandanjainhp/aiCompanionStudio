@@ -5,21 +5,11 @@ import { useAuthStore } from '@/store/authStore';
 import { useProjectsStore } from '@/store/projectsStore';
 import { useState, useRef, useEffect } from 'react';
 import { CreateProjectModal } from '@/components/projects';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
-const DB = {
-  bg: '#0E0C0A',
-  surface: '#161210',
-  border: '#252018',
-  borderBright: '#352C1C',
-  accent: '#E8961E',
-  accentFaint: 'rgba(232,150,30,0.08)',
-  accentDark: '#9A5E0A',
-  text: '#F0E8D8',
-  muted: '#7A6A54',
-  red: '#FF5C5C',
-};
-
-const TOPBAR_H = 56;
+const TOPBAR_H = 64;
 
 export function AppTopbar() {
   const location = useLocation();
@@ -56,113 +46,83 @@ export function AppTopbar() {
 
   return (
     <>
-      <style>{`
-        .tb-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
-        .tb-nav-link { background: transparent; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em; color: ${DB.muted}; transition: color 0.15s; text-decoration: none; }
-        .tb-nav-link:hover { color: ${DB.text}; }
-        .tb-nav-link.active { color: ${DB.accent}; border-bottom: 1px solid ${DB.accent}; }
-        .tb-search { background: ${DB.surface}; border: 1px solid ${DB.border}; color: ${DB.text}; outline: none; padding: 6px 32px 6px 30px; font-size: 11px; font-family: 'JetBrains Mono', monospace; width: 100%; transition: border-color 0.15s; }
-        .tb-search::placeholder { color: ${DB.muted}; }
-        .tb-search:focus { border-color: ${DB.borderBright}; }
-        .tb-new-btn { background: ${DB.accent}; color: #0E0C0A; border: none; padding: 6px 12px; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; cursor: pointer; transition: background 0.15s; font-family: 'JetBrains Mono', monospace; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-        .tb-new-btn:hover { background: ${DB.accentDark}; }
-        .tb-user-btn { background: transparent; border: 1px solid ${DB.border}; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 4px; transition: border-color 0.15s; }
-        .tb-user-btn:hover { border-color: ${DB.borderBright}; }
-        .tb-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; background: transparent; border: none; cursor: pointer; padding: 9px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: ${DB.muted}; transition: all 0.12s; text-align: left; text-decoration: none; }
-        .tb-menu-item:hover { color: ${DB.text}; background: rgba(255,255,255,0.03); }
-        .tb-menu-item.danger { color: ${DB.red}; }
-        .tb-menu-item.danger:hover { color: ${DB.red}; background: rgba(255,92,92,0.08); }
-        .tb-mob-item { display: flex; align-items: center; gap: 10px; width: 100%; background: transparent; border: none; cursor: pointer; padding: 12px 16px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: ${DB.muted}; transition: all 0.12s; text-align: left; text-decoration: none; }
-        .tb-mob-item:hover { color: ${DB.text}; background: rgba(255,255,255,0.03); }
-        .tb-mob-item.active { color: ${DB.accent}; border-left: 2px solid ${DB.accent}; background: ${DB.accentFaint}; }
-        .tb-mob-item.danger { color: ${DB.red}; }
-        .tb-mob-item.danger:hover { background: rgba(255,92,92,0.08); }
-      `}</style>
-
       {/* Fixed topbar */}
       <motion.header
         initial={{ y: -TOPBAR_H, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
-        style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-          height: TOPBAR_H,
-          background: `${DB.bg}f0`,
-          backdropFilter: 'blur(12px)',
-          borderBottom: `1px solid ${DB.border}`,
-        }}
+        className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b-2 border-primary"
+        style={{ height: TOPBAR_H }}
       >
-        <div style={{ height: '100%', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div className="h-full px-6 flex items-center justify-between gap-6 max-w-screen-2xl mx-auto">
 
           {/* Left: Logo */}
-          <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-            <div style={{ width: 28, height: 28, background: DB.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-              <img src="/logo.png" alt="ACS" style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.innerHTML = '<span style="font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;color:#0E0C0A">ACS</span>'; }}
+          <Link to="/dashboard" className="flex items-center gap-3 shrink-0">
+            <div className="w-8 h-8 bg-foreground flex items-center justify-center shrink-0 overflow-hidden">
+              <img src="/logo.png" alt="ACS" className="w-full h-full object-contain invert"
+                onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.innerHTML = '<span class="font-mono text-[11px] font-bold text-background tracking-[0.1em] uppercase">ACS</span>'; }}
               />
             </div>
-            <span className="tb-mono" style={{ fontSize: 11, fontWeight: 700, color: DB.text, letterSpacing: '0.1em', display: 'none' }}
-              ref={el => { if (el) { const mq = window.matchMedia('(min-width: 640px)'); el.style.display = mq.matches ? 'block' : 'none'; mq.addEventListener('change', e => { el.style.display = e.matches ? 'block' : 'none'; }); } }}
-            >
+            <span className="hidden sm:block font-display text-[15px] font-black text-foreground tracking-tight uppercase">
               AI COMPANION STUDIO
             </span>
           </Link>
 
           {/* Center: nav + search */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, maxWidth: 580 }}
-            className="hidden lg:flex"
-          >
+          <div className="hidden lg:flex items-center gap-6 flex-1 max-w-[600px]">
             <Link
               to="/dashboard"
-              className={`tb-nav-link${isActive('/dashboard') ? ' active' : ''}`}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 font-mono text-[11px] font-bold tracking-[0.15em] uppercase transition-colors border-b-2",
+                isActive('/dashboard') 
+                  ? "text-primary border-primary" 
+                  : "text-muted-foreground border-transparent hover:text-foreground"
+              )}
             >
-              <LayoutDashboard size={11} />
+              <LayoutDashboard size={14} />
               DASHBOARD
             </Link>
 
-            <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
-              <Search size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: DB.muted, pointerEvents: 'none' }} />
-              <input
-                className="tb-search"
-                placeholder="Search projects..."
+            <div className="relative flex-1 max-w-[360px]">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+              <Input
+                className="w-full h-9 pl-9 pr-12 rounded-none border-2 border-primary bg-background text-[12px] font-mono focus-visible:ring-0 focus-visible:border-foreground"
+                placeholder="SEARCH PROJECTS..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
-              <kbd className="tb-mono" style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 9, color: DB.muted, background: DB.surface, border: `1px solid ${DB.border}`, padding: '2px 5px', letterSpacing: '0.05em' }}>
+              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[9px] font-bold text-muted-foreground bg-muted/20 border border-primary/20 px-1.5 py-0.5 uppercase tracking-[0.1em]">
                 ⌘K
               </kbd>
             </div>
           </div>
 
           {/* Right: new project + user */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="flex items-center gap-4">
 
             {/* New project */}
             <div className="hidden md:block">
               <CreateProjectModal>
-                <button className="tb-new-btn">
-                  <Plus size={11} />
+                <Button className="h-9 px-4 rounded-none border-2 border-primary bg-primary text-background hover:bg-foreground font-mono text-[11px] font-bold tracking-[0.1em] uppercase gap-2 whitespace-nowrap">
+                  <Plus size={14} />
                   NEW PROJECT
-                </button>
+                </Button>
               </CreateProjectModal>
             </div>
 
             {/* User menu */}
-            <div ref={userMenuRef} style={{ position: 'relative' }}>
-              <button className="tb-user-btn" onClick={() => setUserMenuOpen(v => !v)}>
-                <div style={{
-                  width: 26, height: 26,
-                  background: DB.accent,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                  ...(user?.avatarUrl ? {} : {}),
-                }}>
+            <div ref={userMenuRef} className="relative">
+              <button 
+                className="flex items-center gap-2 p-1 border-2 border-transparent hover:border-primary transition-colors focus:outline-none" 
+                onClick={() => setUserMenuOpen(v => !v)}
+              >
+                <div className="w-8 h-8 bg-primary flex items-center justify-center shrink-0">
                   {user?.avatarUrl
-                    ? <img src={user.avatarUrl} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <span className="tb-mono" style={{ fontSize: 10, fontWeight: 700, color: '#0E0C0A' }}>{initials}</span>
+                    ? <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                    : <span className="font-mono text-[12px] font-bold text-background uppercase">{initials}</span>
                   }
                 </div>
-                <ChevronDown size={10} style={{ color: DB.muted }} />
+                <ChevronDown size={14} className="text-muted-foreground hidden sm:block" />
               </button>
 
               <AnimatePresence>
@@ -172,37 +132,42 @@ export function AppTopbar() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 4 }}
                     transition={{ duration: 0.12 }}
-                    style={{
-                      position: 'absolute', right: 0, top: 'calc(100% + 6px)',
-                      width: 220,
-                      background: DB.surface,
-                      border: `1px solid ${DB.border}`,
-                      zIndex: 100,
-                    }}
+                    className="absolute right-0 top-[calc(100%+8px)] w-[240px] bg-background border-2 border-primary z-[100]"
                   >
-                    <div style={{ padding: '12px 14px', borderBottom: `1px solid ${DB.border}` }}>
-                      <div className="tb-mono" style={{ fontSize: 11, color: DB.text, fontWeight: 600, marginBottom: 2 }}>
-                        {user?.name || 'User'}
+                    <div className="p-4 border-b-2 border-primary bg-muted/10">
+                      <div className="font-mono text-[12px] font-bold text-foreground mb-1 uppercase tracking-[0.05em] truncate">
+                        {user?.name || 'USER'}
                       </div>
-                      <div className="tb-mono" style={{ fontSize: 9, color: DB.muted, letterSpacing: '0.05em' }}>
+                      <div className="font-mono text-[10px] text-muted-foreground tracking-[0.05em] uppercase truncate">
                         {user?.email || ''}
                       </div>
                     </div>
 
-                    <div style={{ padding: '4px 0' }}>
-                      <Link to="/profile" className="tb-menu-item" onClick={() => setUserMenuOpen(false)}>
-                        <User size={12} />
+                    <div className="p-2">
+                      <Link 
+                        to="/profile" 
+                        className="flex items-center gap-3 w-full p-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors" 
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <User size={14} />
                         PROFILE
                       </Link>
-                      <Link to="/settings/security" className="tb-menu-item" onClick={() => setUserMenuOpen(false)}>
-                        <Settings size={12} />
+                      <Link 
+                        to="/settings/security" 
+                        className="flex items-center gap-3 w-full p-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors" 
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <Settings size={14} />
                         SETTINGS
                       </Link>
                     </div>
 
-                    <div style={{ borderTop: `1px solid ${DB.border}`, padding: '4px 0' }}>
-                      <button className="tb-menu-item danger" onClick={() => { setUserMenuOpen(false); handleLogout(); }}>
-                        <LogOut size={12} />
+                    <div className="p-2 border-t-2 border-primary">
+                      <button 
+                        className="flex items-center gap-3 w-full p-3 font-mono text-[11px] font-bold tracking-[0.1em] uppercase text-destructive hover:bg-destructive/10 transition-colors text-left" 
+                        onClick={() => { setUserMenuOpen(false); handleLogout(); }}
+                      >
+                        <LogOut size={14} />
                         LOGOUT
                       </button>
                     </div>
@@ -213,11 +178,10 @@ export function AppTopbar() {
 
             {/* Mobile toggle */}
             <button
-              className="lg:hidden tb-mono"
+              className="lg:hidden flex items-center justify-center w-10 h-10 border-2 border-primary text-foreground hover:bg-muted/20 transition-colors"
               onClick={() => setMobileOpen(v => !v)}
-              style={{ background: 'transparent', border: `1px solid ${DB.border}`, cursor: 'pointer', padding: '5px 7px', color: DB.muted, display: 'flex', alignItems: 'center' }}
             >
-              {mobileOpen ? <X size={14} /> : <Menu size={14} />}
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
@@ -231,70 +195,85 @@ export function AppTopbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 49 }}
+            className="fixed inset-0 z-[49]"
           >
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)' }} onClick={() => setMobileOpen(false)} />
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-              style={{
-                position: 'absolute', right: 0, top: 0, bottom: 0, width: 280,
-                background: DB.bg,
-                borderLeft: `1px solid ${DB.border}`,
-                display: 'flex', flexDirection: 'column',
-                paddingTop: TOPBAR_H,
-              }}
+              className="absolute right-0 top-0 bottom-0 w-[300px] bg-background border-l-2 border-primary flex flex-col pt-[64px]"
             >
               {/* User info */}
-              <div style={{ padding: '20px 16px 16px', borderBottom: `1px solid ${DB.border}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <div style={{ width: 32, height: 32, background: DB.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div className="p-6 border-b-2 border-primary bg-muted/10">
+                <div className="flex items-center gap-4 mb-2">
+                  <div className="w-10 h-10 bg-primary flex items-center justify-center shrink-0">
                     {user?.avatarUrl
-                      ? <img src={user.avatarUrl} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <span className="tb-mono" style={{ fontSize: 11, fontWeight: 700, color: '#0E0C0A' }}>{initials}</span>
+                      ? <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                      : <span className="font-mono text-[14px] font-bold text-background uppercase">{initials}</span>
                     }
                   </div>
-                  <div>
-                    <div className="tb-mono" style={{ fontSize: 11, color: DB.text, fontWeight: 600 }}>{user?.name || 'User'}</div>
-                    <div className="tb-mono" style={{ fontSize: 9, color: DB.muted }}>{user?.email || ''}</div>
+                  <div className="overflow-hidden">
+                    <div className="font-mono text-[12px] font-bold text-foreground uppercase tracking-[0.05em] truncate">{user?.name || 'USER'}</div>
+                    <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.05em] truncate">{user?.email || ''}</div>
                   </div>
                 </div>
               </div>
 
               {/* Nav */}
-              <nav style={{ flex: 1, padding: '8px 0' }}>
+              <nav className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
                 <Link
                   to="/dashboard"
-                  className={`tb-mob-item${isActive('/dashboard') ? ' active' : ''}`}
+                  className={cn(
+                    "flex items-center gap-3 p-4 font-mono text-[11px] font-bold tracking-[0.15em] uppercase transition-colors border-l-2",
+                    isActive('/dashboard')
+                      ? "text-primary bg-primary/10 border-primary"
+                      : "text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/20"
+                  )}
                   onClick={() => setMobileOpen(false)}
                 >
-                  <LayoutDashboard size={13} />
+                  <LayoutDashboard size={16} />
                   DASHBOARD
                 </Link>
-                <Link to="/profile" className="tb-mob-item" onClick={() => setMobileOpen(false)}>
-                  <User size={13} />
+                
+                <div className="my-2 border-t-2 border-primary/20" />
+                
+                <Link 
+                  to="/profile" 
+                  className="flex items-center gap-3 p-4 font-mono text-[11px] font-bold tracking-[0.15em] uppercase text-muted-foreground border-l-2 border-transparent hover:text-foreground hover:bg-muted/20 transition-colors" 
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <User size={16} />
                   PROFILE
                 </Link>
-                <Link to="/settings/security" className="tb-mob-item" onClick={() => setMobileOpen(false)}>
-                  <Settings size={13} />
+                <Link 
+                  to="/settings/security" 
+                  className="flex items-center gap-3 p-4 font-mono text-[11px] font-bold tracking-[0.15em] uppercase text-muted-foreground border-l-2 border-transparent hover:text-foreground hover:bg-muted/20 transition-colors" 
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Settings size={16} />
                   SETTINGS
                 </Link>
-                <div style={{ borderTop: `1px solid ${DB.border}`, margin: '8px 0' }} />
-                <button className="tb-mob-item danger" onClick={() => { handleLogout(); setMobileOpen(false); }}>
-                  <LogOut size={13} />
-                  LOGOUT
-                </button>
+                
+                <div className="mt-auto pt-4 border-t-2 border-primary/20">
+                  <button 
+                    className="flex items-center gap-3 w-full p-4 font-mono text-[11px] font-bold tracking-[0.15em] uppercase text-destructive border-l-2 border-transparent hover:bg-destructive/10 transition-colors text-left" 
+                    onClick={() => { handleLogout(); setMobileOpen(false); }}
+                  >
+                    <LogOut size={16} />
+                    LOGOUT
+                  </button>
+                </div>
               </nav>
 
               {/* New project */}
-              <div style={{ padding: 16, borderTop: `1px solid ${DB.border}` }}>
+              <div className="p-6 border-t-2 border-primary bg-muted/5">
                 <CreateProjectModal>
-                  <button className="tb-new-btn" style={{ width: '100%', justifyContent: 'center' }}>
-                    <Plus size={12} />
+                  <Button className="w-full h-12 rounded-none border-2 border-primary bg-primary text-background hover:bg-foreground font-mono text-[12px] font-bold tracking-[0.1em] uppercase gap-2">
+                    <Plus size={16} />
                     NEW PROJECT
-                  </button>
+                  </Button>
                 </CreateProjectModal>
               </div>
             </motion.div>

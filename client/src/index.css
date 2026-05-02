@@ -2,119 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Chatbot Platform Design System - Modern AI App Aesthetic */
+/* Design System Inspired by WIRED */
 
 @layer base {
   :root {
+    /* Paper White */
     --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* Page Ink */
+    --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 217 91% 60%;
+    /* WIRED Black */
+    --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 20% 95%;
-    --secondary-foreground: 222 47% 11%;
+    /* Inverted secondary */
+    --secondary: 0 0% 0%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 215 20% 95%;
-    --muted-foreground: 215 16% 47%;
+    /* Caption Gray */
+    --muted: 0 0% 46%;
+    --muted-foreground: 0 0% 10%;
 
-    --accent: 215 20% 95%;
-    --accent-foreground: 222 47% 11%;
+    /* Link Blue */
+    --accent: 200 94% 38%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 160 84% 39%;
-    --success-foreground: 0 0% 100%;
+    --border: 210 20% 91%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    --border: 215 20% 91%;
-    --input: 215 20% 91%;
-    --ring: 217 91% 60%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 210 20% 98%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 20% 95%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 215 20% 91%;
-    --sidebar-ring: 217 91% 60%;
-
-    /* Custom chat colors */
-    --chat-user: 217 91% 60%;
-    --chat-user-foreground: 0 0% 100%;
-    --chat-ai: 215 20% 95%;
-    --chat-ai-foreground: 222 47% 11%;
-
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(239, 84%, 67%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(215, 20%, 98%) 100%);
-  }
-
-  .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --success: 160 84% 39%;
-    --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 217 91% 60%;
-
-    --sidebar-background: 222 47% 8%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 20%;
-    --sidebar-ring: 217 91% 60%;
-
-    /* Custom chat colors - dark mode */
-    --chat-user: 217 91% 50%;
-    --chat-user-foreground: 0 0% 100%;
-    --chat-ai: 217 33% 15%;
-    --chat-ai-foreground: 210 40% 98%;
-
-    /* Custom gradients - dark mode */
-    --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 50%) 0%, hsl(239, 84%, 57%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(222, 47%, 8%) 0%, hsl(222, 47%, 6%) 100%);
+    --radius: 0px;
   }
 }
 
@@ -124,7 +50,11 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased font-body;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-foreground tracking-tight;
   }
 
   /* Custom scrollbar */
@@ -138,81 +68,47 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full;
+    @apply bg-muted-foreground/20;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/30;
+    @apply bg-muted-foreground/40;
   }
 }
 
 @layer components {
-  /* Gradient text utility */
-  .text-gradient {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .kicker {
+    @apply font-mono uppercase tracking-[1.2px] text-[13px] font-bold text-foreground mb-2 block;
+  }
+  
+  .headline-hero {
+    @apply font-display text-[64px] leading-[0.93] tracking-[-0.5px];
   }
 
-  /* Glass effect */
-  .glass {
-    @apply bg-background/80 backdrop-blur-xl border border-border/50;
+  .headline-mid {
+    @apply font-display text-[26px] leading-[1.08];
   }
 
-  /* Animate in */
-  .animate-in {
-    animation: fadeIn 0.3s ease-out;
+  .section-ribbon {
+    @apply bg-primary text-primary-foreground font-mono uppercase tracking-[1.2px] text-[12px] font-bold px-4 py-2 w-full block;
   }
 
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .hairline-rule {
+    @apply border-t border-border w-full my-4;
+  }
+  
+  .hard-rule {
+    @apply border-t-2 border-primary w-full my-4;
   }
 
-  /* Streaming cursor */
-  .streaming-cursor::after {
-    content: '▋';
-    animation: blink 1s step-end infinite;
-    @apply text-primary;
-  }
-
-  @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
-  }
-
-  /* Message bubble animations */
-  .message-enter {
-    animation: messageEnter 0.3s ease-out;
-  }
-
-  @keyframes messageEnter {
-    from {
-      opacity: 0;
-      transform: translateY(20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+  /* Link styling */
+  .editorial-link {
+    @apply font-sans text-[14px] text-foreground hover:text-accent hover:underline transition-none;
   }
 }
 
 @layer utilities {
-  /* Smooth transitions */
-  .transition-smooth {
-    @apply transition-all duration-200 ease-out;
-  }
-
-  /* Focus ring */
   .focus-ring {
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 }
