@@ -1,5 +1,5 @@
 # Stage 1: Build the React application
-FROM oven/bun:1-alpine as build
+FROM oven/bun:1.3.13-alpine AS build
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 
 # Copy package.json and install dependencies
 COPY package.json bun.lock* ./
-RUN bun install
+RUN bun install --frozen-lockfile
 
 # Copy the rest of the application
 COPY . .
@@ -17,14 +17,23 @@ COPY . .
 # Build the application
 RUN bun run build
 
-# Stage 2: Serve the application with Nginx
-FROM nginx:alpine
+# Stage 2: Serve the built app with Nginx stable
+FROM nginx:1.27-alpine
 
-# Copy the custom nginx configuration
+# Remove default nginx config and use ours
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy the build output from the previous stage
 COPY --from=build /app/dist /usr/share/nginx/html
+
+# Use a non-root user for security
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    touch /var/run/nginx.pid && \
+    chown nginx:nginx /var/run/nginx.pid
+
+USER nginx
 
 EXPOSE 80
 

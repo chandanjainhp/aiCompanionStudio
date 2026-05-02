@@ -1,20 +1,23 @@
-FROM oven/bun:1-alpine
+FROM oven/bun:1.3.13-alpine
 
-# Install openssl for Prisma to work on Alpine
+# Install openssl (required by Prisma on Alpine) with no-cache to keep image lean
 RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Copy package.json and bun.lockb/bun.lock to install dependencies
+# Copy package.json and lockfile first for better layer caching
 COPY package.json bun.lock* ./
 
-# Install dependencies using bun
-RUN bun install
+# Copy prisma schema so postinstall can run successfully
+COPY prisma ./prisma/
 
-# Copy the rest of the application
+# Install dependencies (frozen to prevent lockfile drift)
+RUN bun install --frozen-lockfile
+
+# Copy the rest of the application source
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client for the target platform
 RUN bunx prisma generate
 
 # Expose the application port

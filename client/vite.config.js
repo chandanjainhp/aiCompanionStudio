@@ -19,17 +19,27 @@ export default defineConfig(({ mode }) => ({
     // Code splitting for better caching
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks: (id) => {
           // Split vendor chunks
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tooltip',
-          ],
-          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'vendor-state': ['zustand', '@tanstack/react-query'],
-          'vendor-animations': ['framer-motion'],
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+            return 'vendor-react';
+          }
+          if (
+            id.includes('node_modules/@radix-ui/react-dialog') ||
+            id.includes('node_modules/@radix-ui/react-dropdown-menu') ||
+            id.includes('node_modules/@radix-ui/react-tooltip')
+          ) {
+            return 'vendor-ui';
+          }
+          if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform/resolvers') || id.includes('node_modules/zod')) {
+            return 'vendor-forms';
+          }
+          if (id.includes('node_modules/zustand') || id.includes('node_modules/@tanstack/react-query')) {
+            return 'vendor-state';
+          }
+          if (id.includes('node_modules/framer-motion')) {
+            return 'vendor-animations';
+          }
         },
       },
     },
