@@ -69,9 +69,18 @@ services:
     networks:
       - app-network
 
+  # Cloudflare Tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared-tunnel
+    # TODO: Replace YOUR_CLOUDFLARE_TOKEN_HERE with the real token from your dashboard!
+    command: tunnel --no-autoupdate run --token YOUR_CLOUDFLARE_TOKEN_HERE
+    restart: unless-stopped
+    networks:
+      - app-network
+
 volumes:
   postgres_data:
-
 
 networks:
   app-network:
