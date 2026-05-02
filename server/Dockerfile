@@ -1,24 +1,24 @@
-FROM node:20-alpine
+FROM oven/bun:1-alpine
 
 # Install openssl for Prisma to work on Alpine
 RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Copy package.json to install dependencies
-COPY package.json ./
+# Copy package.json and bun.lockb/bun.lock to install dependencies
+COPY package.json bun.lock* ./
 
-# Install dependencies (using npm install since we don't have package-lock.json, bun.lock is handled differently)
-RUN npm install
+# Install dependencies using bun
+RUN bun install
 
 # Copy the rest of the application
 COPY . .
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN bunx prisma generate
 
 # Expose the application port
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["bun", "src/index.js"]

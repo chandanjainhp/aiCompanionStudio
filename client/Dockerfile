@@ -1,5 +1,5 @@
 # Stage 1: Build the React application
-FROM node:20-alpine as build
+FROM oven/bun:1-alpine as build
 
 WORKDIR /app
 
@@ -8,14 +8,14 @@ ARG VITE_API_URL=http://localhost:3000/api/v1
 ENV VITE_API_URL=${VITE_API_URL}
 
 # Copy package.json and install dependencies
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
+COPY package.json bun.lock* ./
+RUN bun install
 
 # Copy the rest of the application
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN bun run build
 
 # Stage 2: Serve the application with Nginx
 FROM nginx:alpine
