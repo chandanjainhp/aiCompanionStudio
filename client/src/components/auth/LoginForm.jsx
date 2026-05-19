@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Loader2, ArrowRight, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -187,8 +187,8 @@ export function LoginForm() {
 
           {/* Email */}
           <div className="mb-6 space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
-              <Mail size={12} /> EMAIL ADDRESS
+            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold">
+              EMAIL ADDRESS
             </Label>
             <Input
               id="email"
@@ -208,8 +208,8 @@ export function LoginForm() {
           {loginMethod === 'password' && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} className="mb-6 space-y-2">
               <div className="flex justify-between items-end">
-                <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
-                  <Lock size={12} /> PASSWORD
+                <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold">
+                  PASSWORD
                 </Label>
                 <Link
                   to="/forgot-password"
@@ -249,15 +249,9 @@ export function LoginForm() {
             className="w-full h-14 border-2 border-primary bg-primary text-background hover:bg-foreground hover:text-background rounded-none font-mono text-[12px] font-bold tracking-[0.15em] uppercase transition-colors flex items-center justify-center gap-3 mt-8"
           >
             {isLoading ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                <span>{loginMethod === 'password' ? 'SIGNING IN...' : 'SENDING...'}</span>
-              </>
+              <span>{loginMethod === 'password' ? 'SIGNING IN...' : 'SENDING...'}</span>
             ) : (
-              <>
-                <span>{loginMethod === 'password' ? 'SIGN IN' : 'SEND OTP'}</span>
-                <ArrowRight size={16} />
-              </>
+              <span>{loginMethod === 'password' ? 'SIGN IN' : 'SEND OTP'}</span>
             )}
           </Button>
 

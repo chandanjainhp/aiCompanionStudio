@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
+import "@/store/uiStore"; // ensures theme class applied to <html> before first paint
 
 // Suppress harmless Chrome extension messaging errors
 if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {

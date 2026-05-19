@@ -35,10 +35,26 @@ const SecurityPage = lazy(() => import("./pages/Settings/SecurityPage"));
 const PreferencesPage = lazy(() => import("./pages/Settings/PreferencesPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-// Loading fallback component
-const LoadingFallback = () => <div className="min-h-screen flex items-center justify-center dark bg-background">
-    <div className="animate-spin">⏳ Loading...</div>
-  </div>;
+const LoadingFallback = () => (
+  <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground gap-6">
+    <div>
+      <p className="font-mono text-[11px] uppercase tracking-[0.2em] font-bold text-muted-foreground mb-2">AI COMPANION STUDIO</p>
+      <h1 className="font-display text-[32px] leading-tight tracking-tight">Coding Assistant</h1>
+    </div>
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex gap-1.5">
+        {[0, 1, 2].map(i => (
+          <span
+            key={i}
+            className="w-2 h-2 bg-primary block animate-pulse"
+            style={{ animationDelay: `${i * 0.2}s` }}
+          />
+        ))}
+      </div>
+      <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">Loading — Please wait</p>
+    </div>
+  </div>
+);
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

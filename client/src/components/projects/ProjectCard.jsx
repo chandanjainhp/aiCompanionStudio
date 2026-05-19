@@ -84,7 +84,7 @@ export function ProjectCard({ project, index }) {
               {/* Actions Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="h-[32px] w-[32px] opacity-0 group-hover:opacity-100 transition-opacity border-none hover:bg-background hover:text-foreground">
+                  <Button variant="ghost" size="icon" className="h-[32px] w-[32px] shrink-0 border-none hover:bg-background hover:text-foreground">
                     <MoreVertical size={16} />
                   </Button>
                 </DropdownMenuTrigger>

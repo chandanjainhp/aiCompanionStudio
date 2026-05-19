@@ -42,6 +42,39 @@
 
     --radius: 0px;
   }
+
+  .dark {
+    /* Deep dark canvas — WIRED footer treatment extended to full app */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 96%;
+
+    --card: 0 0% 11%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 0 0% 11%;
+    --popover-foreground: 0 0% 96%;
+
+    /* In dark mode "ink" is white — buttons/borders invert */
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;
+
+    /* Link blue unchanged */
+    --accent: 200 94% 38%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 96%;
+    --ring: 0 0% 96%;
+  }
 }
 
 @layer base {
@@ -82,7 +115,7 @@
   }
   
   .headline-hero {
-    @apply font-display text-[64px] leading-[0.93] tracking-[-0.5px];
+    @apply font-display text-[38px] sm:text-[52px] lg:text-[64px] leading-[0.93] tracking-[-0.5px];
   }
 
   .headline-mid {

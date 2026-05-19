@@ -30,7 +30,7 @@ AI Companion Studio lets you create **project-scoped AI agents** with custom sys
 - 🔐 **Secure Auth** — JWT access/refresh tokens, bcrypt passwords, email OTP verification
 - 🖼️ **Avatar Uploads** — Cloudinary-powered profile pictures
 - 🌗 **Light/Dark Theme** — User-level theme preference
-- 🐳 **Docker Ready** — One-command deployment with `docker-compose`
+- 🐳 **Docker Ready** — One-command deployment with `docker-compose` and Cloudflare Tunnel integration
 
 ---
 
@@ -41,7 +41,7 @@ AI Companion Studio lets you create **project-scoped AI agents** with custom sys
 | **Frontend** | React 18, TypeScript, Vite, Zustand, Shadcn/ui, Tailwind CSS, Framer Motion, Axios, Zod |
 | **Backend** | Node.js, Express, JavaScript (ESM), Prisma ORM, PostgreSQL, JWT, bcrypt, Zod |
 | **External** | OpenRouter.ai (LLM proxy), Cloudinary (image storage), Gmail SMTP (email) |
-| **Infra** | Docker, Docker Compose, Nginx, PostgreSQL 16 |
+| **Infra** | Docker, Docker Compose, Nginx, PostgreSQL 16, Cloudflare Tunnel |
 
 ---
 
@@ -53,7 +53,7 @@ AI Companion Studio lets you create **project-scoped AI agents** with custom sys
 - **PostgreSQL** 14+
 - **OpenRouter API Key** → [openrouter.ai](https://openrouter.ai)
 - **Cloudinary Account** → [cloudinary.com](https://cloudinary.com) *(for avatar uploads)*
-- **Gmail App Password** → *(for email verification, optional)*
+- **Gmail App Password** → *(for email verification)*
 
 ---
 
@@ -84,41 +84,42 @@ cd client && bun install && cd ..
 # Database
 DATABASE_URL="postgresql://admin:password@localhost:5432/ai_companion_studio"
 
-# JWT
+# JWT Secrets
 JWT_SECRET="your-super-secret-jwt-key"
 REFRESH_TOKEN_SECRET="your-refresh-token-secret"
 JWT_EXPIRE="15m"
 REFRESH_TOKEN_EXPIRE="7d"
 
-# OpenRouter (required)
+# OpenRouter Configuration
 OPENROUTER_API_KEY="sk-or-v1-your-key"
 OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
 APP_URL="http://localhost:5173"
 APP_NAME="AI Companion Studio"
 
-# Cloudinary (avatar uploads)
+# Cloudinary (for avatar uploads)
 CLOUDINARY_CLOUD_NAME="your-cloud-name"
 CLOUDINARY_API_KEY="your-api-key"
 CLOUDINARY_API_SECRET="your-api-secret"
 
-# Email (Gmail SMTP)
+# Email Configuration (Gmail SMTP)
 EMAIL_HOST="smtp.gmail.com"
 EMAIL_PORT=587
 EMAIL_USER="your-email@gmail.com"
 EMAIL_PASS="your-app-password"
 EMAIL_FROM="noreply@aicompanionstudio.com"
 
-# Server
+# Server environment
 NODE_ENV="development"
 PORT=3000
 ```
 
-> A full example is available at [`server/.env.example`](./server/.env.example).
-
 #### Frontend — `client/.env.local`
 
+> [!IMPORTANT]
+> Ensure the variable name is `VITE_API_URL` (not `VITE_API_BASE_URL`) to match the API library import in the frontend source code.
+
 ```env
-VITE_API_BASE_URL="http://localhost:3000/api/v1"
+VITE_API_URL="http://localhost:3000/api/v1"
 VITE_APP_NAME="AI Companion Studio"
 VITE_APP_VERSION="1.0.0"
 ```
@@ -138,7 +139,7 @@ npx prisma db seed
 npx prisma studio
 ```
 
-### 5. Start the Application
+### 5. Start the Application Locally
 
 **Terminal 1 — Backend:**
 ```bash
@@ -152,30 +153,51 @@ cd client && npm run dev
 # → http://localhost:5173
 ```
 
-**Terminal 3 — (Optional) DB GUI:**
-```bash
-cd server && npx prisma studio
-# → http://localhost:5555
-```
-
 ---
 
-## 🐳 Docker Deployment
+## 🐳 Docker & Cloudflare Tunnel Deployment
 
-```bash
-# Build and start all services (PostgreSQL, backend, frontend)
-docker-compose up --build -d
+The repository includes a ready-to-use Docker environment designed with **Single Subdomain Routing** and **Cloudflare Tunnel integration** for secure public hosting without exposing local ports.
 
-# Stop services
-docker-compose down
+### Architectural Flow
+
+When deploying behind a Cloudflare Tunnel under a single subdomain (e.g. `aicompanionstudio.chandanjainhp.in`), all public traffic is securely tunneled to the **React Client Nginx Container** (internal port `80`).
+
+```
+Public Internet ➔ Cloudflare Tunnel ➔ Client Nginx (Port 80)
+                                           ├── Static Files (HTML, JS, CSS)
+                                           └── /api/* requests ➔ Server (Port 3000)
 ```
 
-The `docker-compose.yml` spins up:
-- **PostgreSQL 16** (with health checks and persistent volume)
-- **Backend** on port `3000`
-- **Frontend** (Nginx) on port `3001`
+The frontend Nginx acts as a reverse proxy using [client/nginx.conf](./client/nginx.conf), intercepting all API traffic starting with `/api/` and forwarding it directly to the Express backend container, eliminating all CORS issues and complex multi-subdomain configurations.
 
-> For production, update `CORS_ORIGIN` and `APP_URL` in `docker-compose.yml` and `server/.env`.
+### Deploying the Stack
+
+1. **Configure Environment Variables**:
+   Update `CORS_ORIGIN` and `APP_URL` in `docker-compose.yml` and `server/.env` to reflect your production domain name:
+   ```env
+   CORS_ORIGIN=https://aicompanionstudio.chandanjainhp.in
+   APP_URL=https://aicompanionstudio.chandanjainhp.in
+   ```
+
+2. **Map Public Hostname in Cloudflare**:
+   In your **Cloudflare Zero Trust Dashboard**, map your subdomain to the internal client service name and port:
+   
+   | Public Hostname | Service Type | URL |
+   | :--- | :--- | :--- |
+   | `aicompanionstudio.chandanjainhp.in` | **HTTP** | `http://client:80` |
+
+3. **Start the Stack**:
+   Start all services (PostgreSQL database, Node backend, client container with reverse proxy, and Cloudflare Tunnel client) in detached mode:
+   ```bash
+   docker-compose up --build -d
+   ```
+
+4. **Re-applying Nginx or Build Configuration changes**:
+   If you modify `client/nginx.conf` or frontend environment variables, rebuild the image and recreate the container using:
+   ```bash
+   docker-compose up -d --build client
+   ```
 
 ---
 
@@ -192,6 +214,7 @@ aiCompanionStudio/
 │   │   ├── lib/              # API client, utilities
 │   │   └── types/            # TypeScript type definitions
 │   ├── Dockerfile
+│   ├── nginx.conf            # SPA server with reverse-proxy for API
 │   └── vite.config.ts
 │
 ├── server/                    # Node.js backend
@@ -207,9 +230,9 @@ aiCompanionStudio/
 │   ├── Dockerfile
 │   └── .env.example
 │
-├── docker-compose.yml
-├── nginx_host.conf
-├── ARCHITECTURE.md
+├── docker-compose.yml         # Combined local & prod deployment stack
+├── nginx_host.conf            # Optional host-level Nginx template
+├── ARCHITECTURE.md            # System design, data model, and flows
 └── README.md
 ```
 
@@ -222,9 +245,10 @@ aiCompanionStudio/
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/v1/auth/register` | Register a new user |
-| `POST` | `/api/v1/auth/login` | Login and receive tokens |
+| `POST` | `/api/v1/auth/login` | Login and receive JWT tokens |
+| `POST` | `/api/v1/auth/send-otp` | Send email verification OTP |
 | `POST` | `/api/v1/auth/verify-otp` | Verify email with OTP |
-| `POST` | `/api/v1/auth/refresh` | Refresh access token |
+| `POST` | `/api/v1/auth/refresh` | Refresh JWT access token |
 | `POST` | `/api/v1/auth/logout` | Invalidate session |
 
 ### Projects
@@ -240,24 +264,16 @@ aiCompanionStudio/
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/v1/projects/:id/conversations` | List conversations |
+| `GET` | `/api/v1/projects/:id/conversations` | List conversations (paginated) |
 | `POST` | `/api/v1/projects/:id/conversations` | Create a conversation |
-| `GET` | `/api/v1/projects/:id/conversations/:cid/messages` | Get messages |
-| `POST` | `/api/v1/projects/:id/conversations/:cid/messages` | Send a message |
-
-### Utility
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Server health check |
-
-All protected routes require `Authorization: Bearer <token>`.
+| `GET` | `/api/v1/projects/:id/conversations/:cid/messages` | Get conversation message history |
+| `POST` | `/api/v1/projects/:id/conversations/:cid/messages` | Send message and get AI response |
 
 ---
 
 ## 🤖 Supported AI Models
 
-Via OpenRouter, the following models are available out of the box:
+Through the OpenRouter proxy, you can interact with any state-of-the-art model. Default models available include:
 
 | Provider | Model ID |
 |----------|----------|
@@ -268,102 +284,44 @@ Via OpenRouter, the following models are available out of the box:
 
 ---
 
-## 🛠️ Available Commands
+## 🧪 Testing & Verification
 
-### Backend (`server/`)
+The backend includes a robust and complete test suite written in Vitest covering all core services, route isolations, range boundaries, and integrations.
 
-```bash
-npm run dev                    # Start with auto-reload
-npm start                      # Production mode
-npx prisma migrate deploy      # Apply migrations
-npx prisma studio              # Open DB GUI
-npx prisma db seed             # Seed sample data
-npx prisma generate            # Regenerate Prisma client
-```
+### Running Tests
 
-### Frontend (`client/`)
-
-```bash
-npm run dev                    # Dev server with HMR
-npm run build                  # Production build
-npm run preview                # Preview production build
-npm run test                   # Run tests (Vitest)
-npm run lint                   # ESLint
-```
-
----
-
-## 🧪 Testing
-
-### Project Settings Tests
-
-The backend includes comprehensive tests for **per-project AI configuration** to ensure each project maintains its own independent model, temperature, max tokens, and system prompt settings.
-
-**Run Tests:**
 ```bash
 cd server
-npm install
-npm run db:migrate
 npm test
 ```
 
-**Test Coverage:**
-- ✅ Project creation with custom/default settings
-- ✅ Project retrieval and independence verification
-- ✅ Project settings updates (full and partial)
-- ✅ System prompt and core memory handling
-- ✅ Multi-user isolation and data security
-- ✅ Temperature and token boundary validation
-- ✅ AI API integration readiness
+### Verified Test Suites
 
-**Expected Result:** All 17 tests pass ✅
-
-**Documentation:**
-- [TEST_GUIDE.md](./server/TEST_GUIDE.md) — Detailed test documentation
-- [QUICK_START.md](./server/QUICK_START.md) — Quick reference guide
-- [VERIFICATION_SUMMARY.md](./server/VERIFICATION_SUMMARY.md) — Complete verification summary
+- **Project Settings & Boundary Limits**:
+  - Validates independent AI model, prompt, and token boundary settings.
+  - Correctly verifies and maintains decimal boundary values (e.g. `0.0` and `1.0` temperatures) using precise nullish operators.
+- **Chat Memory & Pagination**:
+  - Confirms ordered message flow storage and correct chronological retrieval.
+  - Verifies multi-tenant database isolation.
+  - Confirms total message pagination metadata reporting across service APIs.
+  
+**Current Test Status**: `37 / 37 passed` (100% SUCCESS) ✅
 
 ---
 
 ## 🐛 Troubleshooting
 
+**SyntaxError: Unexpected token '<', "<html>... is not valid JSON"**
+- Rebuild the frontend client container. This occurs when the client's `nginx.conf` has the API proxy block disabled, causing Nginx to serve the HTML SPA entry point for `/api` requests. Run `docker-compose up -d --build client` to fix this.
+
 **Database connection refused (`ECONNREFUSED 127.0.0.1:5432`)**
-```bash
-sudo systemctl start postgresql
-```
-
-**Port 3000 already in use (`EADDRINUSE`)**
-```bash
-lsof -i :3000 && kill -9 <PID>
-# or: PORT=3001 npm run dev
-```
-
-**OpenRouter 401 Unauthorized**
-- Check `OPENROUTER_API_KEY` in `server/.env`
-- Verify the key is active at [openrouter.ai/keys](https://openrouter.ai/keys)
+- Make sure PostgreSQL is started locally (`sudo systemctl start postgresql`) or ensure you don't have host port binding conflicts when starting `docker-compose.yml` if port 5432 is already bound.
 
 **JWT token errors in browser**
-- Clear `localStorage` tokens in DevTools → Application → Local Storage, then log in again
+- Clear `localStorage` tokens in DevTools ➔ Application ➔ Local Storage, then log in again.
 
 **Email not sending**
-- Enable Gmail 2FA and generate an [app-specific password](https://myaccount.google.com/apppasswords)
-- Use that password (not your account password) as `EMAIL_PASS`
-
-**Frontend can't reach backend**
-- Verify `VITE_API_BASE_URL` in `client/.env.local`
-- Check browser console for CORS errors
-
----
-
-## 🗺️ Roadmap
-
-- [ ] WebSocket streaming for real-time responses
-- [ ] Advanced conversation search
-- [ ] Conversation sharing & collaboration
-- [ ] Voice input / output
-- [ ] Export conversations to PDF / Markdown
-- [ ] Team / organization workspaces
-- [ ] Analytics dashboard
+- Enable Gmail 2FA and generate an app-specific password in your Google Account. Use that app-specific password as `EMAIL_PASS` in your `.env`.
 
 ---
 
@@ -381,18 +339,3 @@ Please follow the existing code style (TypeScript strict mode, ESLint, Prettier)
 ## 📄 License
 
 MIT © [Chandan Jain](https://github.com/chandanjainhp)
-
----
-
-## 📚 Additional Documentation
-
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — System design, data model, and flows
-- [server/QUOTA_SYSTEM_DOCUMENTATION.md](./server/QUOTA_SYSTEM_DOCUMENTATION.md) — Quota system details
-- [server/CHANGELOG.md](./server/CHANGELOG.md) — Backend changelog
-
----
-
-## 💬 Support
-
-- **Bugs & Feature Requests**: [GitHub Issues](https://github.com/chandanjainhp/aiCompanionStudio/issues)
-- **Email**: chandanjaincj93@gmail.com

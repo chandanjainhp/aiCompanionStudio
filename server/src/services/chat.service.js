@@ -230,6 +230,7 @@ export const getProjectConversations = async (
       createdAt: conv.createdAt,
       updatedAt: conv.updatedAt,
     })),
+    total,
     pagination: {
       page,
       limit,

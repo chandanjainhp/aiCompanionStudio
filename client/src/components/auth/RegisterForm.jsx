@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Loader2, ArrowRight, User, Mail, Lock, Check, X } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -113,8 +113,8 @@ export function RegisterForm() {
 
           {/* Name */}
           <div className="mb-6 space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
-              <User size={12} /> FULL NAME
+            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold">
+              FULL NAME
             </Label>
             <Input
               type="text"
@@ -131,8 +131,8 @@ export function RegisterForm() {
 
           {/* Email */}
           <div className="mb-6 space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
-              <Mail size={12} /> EMAIL ADDRESS
+            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold">
+              EMAIL ADDRESS
             </Label>
             <Input
               type="email"
@@ -149,8 +149,8 @@ export function RegisterForm() {
 
           {/* Password */}
           <div className="mb-6 space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
-              <Lock size={12} /> PASSWORD
+            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold">
+              PASSWORD
             </Label>
             <div className="relative">
               <Input
@@ -174,10 +174,9 @@ export function RegisterForm() {
                 const ok = rule.regex.test(watchedPassword);
                 return (
                   <div key={rule.id} className="flex items-center gap-3">
-                    {ok
-                      ? <Check size={12} className="text-primary flex-shrink-0" />
-                      : <X size={12} className="text-muted-foreground flex-shrink-0" />
-                    }
+                    <span className={cn("font-mono text-[10px] font-bold flex-shrink-0", ok ? "text-primary" : "text-muted-foreground")}>
+                      {ok ? '✓' : '—'}
+                    </span>
                     <span className={cn(
                       "font-mono text-[10px] tracking-[0.05em]",
                       ok ? "text-primary font-bold" : "text-muted-foreground"
@@ -192,8 +191,8 @@ export function RegisterForm() {
 
           {/* Confirm Password */}
           <div className="mb-6 space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold flex items-center gap-2">
-              <Lock size={12} /> CONFIRM PASSWORD
+            <Label className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold">
+              CONFIRM PASSWORD
             </Label>
             <div className="relative">
               <Input
@@ -232,7 +231,7 @@ export function RegisterForm() {
                       onChange={e => field.onChange(e.target.checked)}
                     />
                     <div className="w-4 h-4 border-2 border-primary bg-background peer-checked:bg-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-primary transition-colors flex items-center justify-center">
-                      {field.value && <Check size={12} className="text-background" />}
+                      {field.value && <span className="text-background text-[10px] font-bold leading-none">✓</span>}
                     </div>
                   </div>
                   <span className="font-mono text-[10px] text-muted-foreground tracking-[0.05em] leading-relaxed mt-0.5">
@@ -263,15 +262,9 @@ export function RegisterForm() {
             className="w-full h-14 border-2 border-primary bg-primary text-background hover:bg-foreground hover:text-background rounded-none font-mono text-[12px] font-bold tracking-[0.15em] uppercase transition-colors flex items-center justify-center gap-3 mb-8"
           >
             {isLoading ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                <span>CREATING ACCOUNT...</span>
-              </>
+              <span>CREATING ACCOUNT...</span>
             ) : (
-              <>
-                <span>CREATE ACCOUNT</span>
-                <ArrowRight size={16} />
-              </>
+              <span>CREATE ACCOUNT</span>
             )}
           </Button>
 

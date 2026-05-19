@@ -107,20 +107,20 @@ export function CoreMemoryViewer({ projectId, initialMemory = '', lastUpdated = 
 
   return (
     <div className="w-full space-y-4">
-      <div className="border rounded-lg bg-card">
+      <div className="border-2 border-primary bg-card">
         <div
           className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <Brain className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-accent/10 flex items-center justify-center">
+              <Brain className="w-5 h-5 text-accent" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold flex items-center gap-2">
                 🧠 Agent's Core Memory
                 {factsList.length > 0 && (
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.5px] bg-accent/10 text-accent px-2 py-1">
                     {factsList.length} fact{factsList.length !== 1 ? 's' : ''}
                   </span>
                 )}
@@ -150,7 +150,7 @@ export function CoreMemoryViewer({ projectId, initialMemory = '', lastUpdated = 
                   value={editedMemory}
                   onChange={(e) => setEditedMemory(e.target.value)}
                   placeholder="Add or edit facts about the user, preferences, and constraints..."
-                  className="w-full h-32 p-3 border rounded-md bg-background text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full h-32 p-3 border-2 border-primary bg-background text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <div className="text-xs text-muted-foreground">
                   <p>Format: One fact per line, starting with • or -</p>
@@ -189,7 +189,7 @@ export function CoreMemoryViewer({ projectId, initialMemory = '', lastUpdated = 
                     {factsList.map((fact, index) => (
                       <div
                         key={index}
-                        className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded text-sm"
+                        className="p-3 bg-muted/30 border border-border text-sm"
                       >
                         {fact}
                       </div>
@@ -225,9 +225,9 @@ export function CoreMemoryViewer({ projectId, initialMemory = '', lastUpdated = 
 
       {/* Info card about auto-updating memory */}
       {!isEditing && factsList.length === 0 && (
-        <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded text-sm">
-          <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">💡 How Core Memory Works</p>
-          <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+        <div className="p-3 bg-muted/30 border-2 border-primary text-sm">
+          <p className="font-mono text-[11px] uppercase tracking-[0.5px] font-bold text-foreground mb-1">💡 How Core Memory Works</p>
+          <ul className="text-xs text-muted-foreground space-y-1">
             <li>✓ After each conversation, the agent extracts key facts and learns about you</li>
             <li>✓ Your preferences, constraints, and domain knowledge are automatically remembered</li>
             <li>✓ Memory facts are injected into every future conversation for consistency</li>
